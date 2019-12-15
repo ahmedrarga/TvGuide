@@ -47,7 +47,7 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
-        }
+        }///
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         searchView = findViewById(R.id.searchView);
