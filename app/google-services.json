@@ -1,0 +1,85 @@
+{
+  "project_info": {
+    "project_number": "761035522451",
+    "firebase_url": "https://mr-cinema.firebaseio.com",
+    "project_id": "mr-cinema",
+    "storage_bucket": "mr-cinema.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:761035522451:android:f255e981ebf8c258cbe866",
+        "android_client_info": {
+          "package_name": "com.example.mrcinema"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "761035522451-he04eantf3ul7vvt06g5shc431bj85cv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mrcinema",
+            "certificate_hash": "b3162117287d605ecdfae11d7708821103f22dfe"
+          }
+        },
+        {
+          "client_id": "761035522451-vdpga9bniv5ahk622jsbh3srebloruim.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWP8MH__BIKNoQBg-Ymww7BTeudkAZdIA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "761035522451-vdpga9bniv5ahk622jsbh3srebloruim.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:761035522451:android:1e0f43d7588b7296cbe866",
+        "android_client_info": {
+          "package_name": "com.example.tvguide"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "761035522451-35o8so8o4ch89bl4mpk64v6ktp8i0pbd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tvguide",
+            "certificate_hash": "b3162117287d605ecdfae11d7708821103f22dfe"
+          }
+        },
+        {
+          "client_id": "761035522451-vdpga9bniv5ahk622jsbh3srebloruim.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWP8MH__BIKNoQBg-Ymww7BTeudkAZdIA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "761035522451-vdpga9bniv5ahk622jsbh3srebloruim.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
