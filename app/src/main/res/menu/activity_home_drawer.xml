@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@android:drawable/ic_media_next"
+            android:title="Feeds" />
+        <item
+            android:id="@+id/new_post"
+            android:icon="@android:drawable/ic_menu_add"
+            android:title="New Post" />
+        <item
+            android:id="@+id/watchlist"
+            android:icon="@android:drawable/ic_menu_save"
+            android:title="Watchlist" />
+        <item
+            android:id="@+id/nav_gallery"
+            android:icon="@android:drawable/ic_media_play"
+            android:title="Recommendations" />
+    </group>
+
+    <item android:title="Other">
+        <menu>
+            <item
+                android:id="@+id/Share"
+                android:icon="@drawable/ic_menu_share"
+                android:title="@string/menu_share" />
+            <item
+                android:id="@+id/Contanct"
+                android:icon="@drawable/ic_menu_send"
+                android:title="@string/menu_send" />
+            <item
+                android:id="@+id/ResetPassword"
+                android:icon="@android:drawable/ic_lock_power_off"
+                android:title="Change Password"
+                />
+            <item
+            android:id="@+id/Logout"
+            android:icon="@android:drawable/ic_lock_power_off"
+            android:title="Logout"
+            />
+
+        </menu>
+    </item>
+
+</menu>

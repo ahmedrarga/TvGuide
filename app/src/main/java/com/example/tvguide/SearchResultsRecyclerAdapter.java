@@ -1,7 +1,10 @@
 package com.example.tvguide;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,9 +23,11 @@ public class SearchResultsRecyclerAdapter extends
 
     private List<Movie> movies;
     private Context context;
-    public SearchResultsRecyclerAdapter(List<Movie> movies, Context context){
+    private String cl;
+    public SearchResultsRecyclerAdapter(List<Movie> movies, Context context, String cl){
         this.movies = movies;
         this.context = context;
+        this.cl = cl;
     }
 
     @NonNull
@@ -39,6 +44,7 @@ public class SearchResultsRecyclerAdapter extends
         return viewHolder;
     }
 
+    @SuppressLint("ResourceAsColor")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         // Get the data model based on position
@@ -51,6 +57,9 @@ public class SearchResultsRecyclerAdapter extends
         Picasso.get()
                 .load(movie.getPoster_path())
                 .into(holder.image);
+
+
+
     }
 
     @Override
@@ -76,9 +85,17 @@ public class SearchResultsRecyclerAdapter extends
 
         @Override
         public void onClick(View view) {
+            String media_type = "";
+            if(cl.equals("movie"))
+                media_type = "movie";
+            else if (cl.equals("show")){
+                media_type = "tv";
+            }
+            else
+                media_type = movies.get(getPosition()).getMedia_type();
             Intent intent = new Intent(context, MovieProfileActivity.class);
             intent.putExtra("id", movies.get(this.getPosition()).getId());
-            intent.putExtra("media_type",  movies.get(this.getPosition()).getMedia_type());
+            intent.putExtra("media_type",  media_type);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         }

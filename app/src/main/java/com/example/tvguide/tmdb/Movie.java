@@ -31,6 +31,9 @@ public class Movie implements Parcelable {
         id = dest.readInt();
         media_type = dest.readString();
     }
+    public Movie(){
+
+    }
     public Movie(int id, String name, String overview, String poster_path, String backdrop_path, String media_type){
         this.id = id;
         this.name = name;
@@ -39,20 +42,24 @@ public class Movie implements Parcelable {
         this.backdrop_path = IMAGE_PATH + backdrop_path;
         this.media_type = media_type;
     }
-    public Movie(JSONObject obj) throws JSONException {
-        id = Integer.parseInt(obj.getString("id"));
-        overview = obj.getString("overview");
-        poster_path = IMAGE_PATH +  obj.getString("poster_path");
-        backdrop_path = IMAGE_PATH + obj.getString("backdrop_path");
-        switch (obj.getString("media_type")){
-            case "movie":
-                name = obj.getString("original_title");
-                media_type = "movie";
-                break;
-            case "tv":
-                name = obj.getString("name");
-                media_type = "tv";
-                break;
+    public Movie(JSONObject obj) {
+        try {
+            id = Integer.parseInt(obj.getString("id"));
+            overview = obj.getString("overview");
+            poster_path = IMAGE_PATH + obj.getString("poster_path");
+            backdrop_path = IMAGE_PATH + obj.getString("backdrop_path");
+            switch (obj.getString("media_type")) {
+                case "movie":
+                    name = obj.getString("original_title");
+                    media_type = "movie";
+                    break;
+                case "tv":
+                    name = obj.getString("name");
+                    media_type = "tv";
+                    break;
+            }
+        }catch (JSONException e){
+            media_type = "";
         }
     }
 
@@ -85,5 +92,13 @@ public class Movie implements Parcelable {
 
     public String getBackdrop_path() {
         return backdrop_path;
+    }
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public String getIMAGE_PATH() {
+        return IMAGE_PATH;
     }
 }
