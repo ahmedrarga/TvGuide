@@ -24,4 +24,5 @@ public class BaseActivity extends AppCompatActivity {
         t.setText(title);
     }
 
+
 }

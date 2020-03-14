@@ -10,11 +10,11 @@
 
     <ImageView
         android:id="@+id/imageView"
+        android:src="@mipmap/icon_full"
         android:layout_width="match_parent"
-        android:layout_height="154dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:contentDescription="TvGuide"
-        app:srcCompat="@mipmap/ic_launcher" />
+        android:contentDescription="TvGuide" />
 
     <TextView
         android:id="@+id/textView"
@@ -37,7 +37,7 @@
         android:layout_gravity="center"
         android:background="@drawable/round_corner"
         android:onClick="selectPhoto"
-        app:srcCompat="@mipmap/ic_profile_round" />
+        app:srcCompat="@drawable/ic_person" />
 
     <Button
         android:id="@+id/button"

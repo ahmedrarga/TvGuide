@@ -1,12 +1,6 @@
 package com.example.tvguide.tmdb;
 
-import android.widget.ListView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.example.tvguide.HttpRequest;
-import com.example.tvguide.MovieSuggestion;
+import com.example.tvguide.YoutubeAPI;
 import com.squareup.okhttp.Response;
 
 import org.json.JSONArray;
@@ -15,10 +9,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -98,7 +89,6 @@ public class Requests {
         try {
             for (int i = 0; i < array.length(); i++) {
                 try {
-                    System.out.println(((JSONObject)array.get(i)).getString("poster_path"));
                     list.add(new Movie((JSONObject) array.get(i)));
                 } catch (JSONException e) {
                     System.out.println("Error in getMovies " + e.getMessage());
@@ -108,6 +98,17 @@ public class Requests {
             return list;
         }
         return list;
+    }
+    public JSONObject getJson() {
+        JSONObject toRet;
+        try{
+            toRet = new JSONObject(response.body().string());
+            return toRet;
+        }catch (IOException e){
+            return null;
+        }catch (JSONException e1){
+            return null;
+        }
     }
     public Movie getMovieById() {
         Movie v = null;
@@ -123,7 +124,7 @@ public class Requests {
                             obj.getString("backdrop_path"),
                             media_type);
                 } else {
-                    v = new Movie(id, obj.getString("original_title"),
+                    v = new Movie(id, obj.getString("title"),
                             obj.getString("overview"),
                             obj.getString("poster_path"),
                             obj.getString("backdrop_path"),
@@ -242,4 +243,167 @@ public class Requests {
         }
     }
 
+    public ArrayList<String> getImages(boolean poster, int id, String media_type){
+        String query = "";
+        if(media_type.equals("tv"))
+            query = "https://api.themoviedb.org/3/tv/" +
+                    id + "/images?" +
+                    "api_key=" + api_key;
+        else
+            query = "https://api.themoviedb.org/3/movie/" +
+                    id +
+                    "/images?api_key=" + api_key;
+        String path = "https://image.tmdb.org/t/p/w500";
+        setResponse(query);
+        ArrayList<String> list = new ArrayList<>();
+        try {
+            JSONObject obj = new JSONObject(response.body().string());
+            if(!poster) {
+                JSONArray backdrops = obj.getJSONArray("backdrops");
+                for (int i = 0; i < backdrops.length(); i++) {
+                    list.add(path + (backdrops.getJSONObject(i).getString("file_path")));
+                }
+            }
+            if(poster) {
+                JSONArray posters = obj.getJSONArray("posters");
+                for (int i = 0; i < posters.length(); i++) {
+                    list.add(path + (posters.getJSONObject(i).getString("file_path")));
+                }
+            }
+
+        }catch (JSONException e){
+            System.out.println(e.getMessage());
+        }catch (IOException e1){
+            System.out.println(e1.getMessage());
+        }
+        return list;
+    }
+
+    public List<Episode> getEpisodes(int season_id, int movie_id){
+        List<Episode> episodes = new ArrayList<>();
+        String query = "https://api.themoviedb.org/3/tv/" +
+                movie_id +
+                "/season/" + season_id +
+                "?api_key=f98d888dd7ebd466329c6a26f1018a55" +
+                "&language=en-US";
+        setResponse(query);
+        try {
+            JSONArray array = (JSONArray) new JSONObject(response.body().string()).get("episodes");
+            for (int i = 0; i < array.length(); i++){
+                episodes.add(new Episode(movie_id, season_id, (JSONObject)array.get(i)));
+            }
+
+        }catch (JSONException e){
+            System.out.println(e.getMessage());
+        } catch (IOException e1){
+            System.out.println(e1.getMessage());
+        }
+        return episodes;
+    }
+    public JSONObject getDetails(int id, String media_type) throws IOException, JSONException{
+        String query = "";
+        if(media_type.equals("tv"))
+            query = "https://api.themoviedb.org/3/" +
+                    "tv" +
+                    "/" + id +
+                    "?api_key=" + api_key +
+                    "&language=en-US";
+        else
+            query = "https://api.themoviedb.org/3/" +
+                    "movie" +
+                    "/" + id +
+                    "?api_key=" + api_key +
+                    "&language=en-US";
+
+        setResponse(query);
+
+        return new JSONObject(response.body().string());
+
+
+    }
+    public ArrayList<Movie> getSimilar(int id, String media_type){
+        String query = "";
+        if(media_type.equals("tv")) {
+            query = "https://api.themoviedb.org/3/tv/" +
+                    id +
+                    "/similar?api_key=" + api_key +
+                    "&language=en-US&page=1";
+        }else{
+            query = "https://api.themoviedb.org/3/movie/" +
+                    id +
+                    "/similar?api_key=" + api_key +
+                    "&language=en-US&page=1";
+        }
+        setResponse(query);
+        ArrayList<Movie> movies = new ArrayList<>();
+        try{
+            JSONObject obj = new JSONObject(response.body().string());
+            JSONArray array = ((JSONArray)obj.get("results"));
+            for(int i = 0; i < array.length(); i++){
+                JSONObject tmp = (JSONObject)array.getJSONObject(i);
+                movies.add(new Movie(tmp));
+            }
+        }catch (IOException e1){
+
+        }catch (JSONException e2){
+
+        }
+        return movies;
+    }
+    public ArrayList<Cast> getCast(int id, String media_type){
+        ArrayList<Cast> cast = new ArrayList<>();
+        String query = "";
+        if(media_type.equals("movie")){
+            query = "https://api.themoviedb.org/3/movie/" +
+                    id +
+                    "/credits?" +
+                    "api_key=" + api_key + "&language=en-US";
+        }else{
+            query = "https://api.themoviedb.org/3/tv/" +
+                    id +
+                    "/credits?api_key=" + api_key + "&language=en-US";
+        }
+        setResponse(query);
+        try{
+            JSONObject object = new JSONObject(response.body().string());
+            JSONArray array = object.getJSONArray("cast");
+            for (int i = 0; i < array.length(); i++){
+                cast.add(new Cast(array.getJSONObject(i)));
+            }
+
+        }catch (IOException e1){
+
+        }catch (JSONException e2){
+
+        }
+        return cast;
+    }
+    public List<YoutubeAPI> getVideos(int  id, String media_type){
+        String query = "";
+        if(media_type.equals("tv")){
+            query = "https://api.themoviedb.org/3/tv/" +
+                    id +
+                    "/videos?" +
+                    "api_key=" + api_key +
+                    "&language=en-US";
+        }else{
+            query = "https://api.themoviedb.org/3/movie/" +
+                    id +
+                    "/videos?api_key=" + api_key +
+                    "&language=en-US";
+        }
+        setResponse(query);
+        List<YoutubeAPI> toRet = new ArrayList<>();
+        try {
+            JSONArray array = new JSONObject(response.body().string()).getJSONArray("results");
+            for (int i = 0; i < array.length(); i++){
+                toRet.add(new YoutubeAPI(array.getJSONObject(i)));
+            }
+        }catch (IOException e1){
+            System.out.println(e1.getMessage());
+        }catch (JSONException e2){
+            System.out.println(e2.getMessage());
+        }
+        return toRet;
+    }
 }

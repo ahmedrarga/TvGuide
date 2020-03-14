@@ -17,6 +17,10 @@
             android:icon="@android:drawable/ic_menu_save"
             android:title="Watchlist" />
         <item
+            android:id="@+id/Discover"
+            android:icon="@android:drawable/ic_menu_save"
+            android:title="Discover" />
+        <item
             android:id="@+id/nav_gallery"
             android:icon="@android:drawable/ic_media_play"
             android:title="Recommendations" />
@@ -29,9 +33,9 @@
                 android:icon="@drawable/ic_menu_share"
                 android:title="@string/menu_share" />
             <item
-                android:id="@+id/Contanct"
+                android:id="@+id/setting"
                 android:icon="@drawable/ic_menu_send"
-                android:title="@string/menu_send" />
+                android:title="Settings" />
             <item
                 android:id="@+id/ResetPassword"
                 android:icon="@android:drawable/ic_lock_power_off"

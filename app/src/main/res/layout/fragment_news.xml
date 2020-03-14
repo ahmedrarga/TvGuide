@@ -5,9 +5,18 @@
     android:layout_height="match_parent"
     android:layout_marginTop="10dp"
     android:background="@color/background"
-    tools:context=".News">
+    tools:context=".HomePage.News">
+
+    <ProgressBar
+        android:id="@+id/progressBar3"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:progressBackgroundTint="@android:color/holo_red_dark" />
 
     <LinearLayout
+        android:id="@+id/news"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -104,6 +113,7 @@
                         android:layout_height="200dp" />
 
                 </LinearLayout>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
