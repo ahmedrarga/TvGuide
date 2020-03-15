@@ -2,6 +2,7 @@ package com.example.tvguide.MovieProfile;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,8 +28,10 @@ import android.widget.TextView;
 import com.example.tvguide.R;
 import com.example.tvguide.comment;
 import com.example.tvguide.tmdb.Episode;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -110,6 +114,47 @@ public class EpisodeFragment extends DialogFragment implements View.OnClickListe
         String title = getArguments().getString("title", "Enter Name");
         getDialog().setTitle(title);
         final Episode e = Track.episode;
+        final CheckBox checkBox = view.findViewById(R.id.watched);
+        Drawable img = getContext().getResources().getDrawable( R.drawable.ic_round_uncheck);
+
+        checkBox.setButtonDrawable(img);
+        if(e.isWatched()){
+            img = getContext().getResources().getDrawable( R.drawable.ic_checked);
+            checkBox.setButtonDrawable(img);
+            checkBox.setText("Watched");
+        }
+        final FirebaseFirestore db = FirebaseFirestore.getInstance();
+        final String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        checkBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!e.isWatched()) {
+                    db.collection("Tracking")
+                            .document(mail)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        Tracking t = task.getResult().toObject(Tracking.class);
+                                        if (t == null) {
+                                            t = new Tracking();
+                                        }
+                                        t.setEpisode(e.getId(), e.getS_id(), e);
+                                        db.collection("Tracking")
+                                                .document(mail)
+                                                .set(t);
+                                        checkBox.setText("Watched");
+                                        Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
+                                        checkBox.setButtonDrawable(img);
+
+                                    }
+
+                                }
+                            });
+                }
+            }
+        });
         TextView name = view.findViewById(R.id.episode_title);
         ImageView imageView = view.findViewById(R.id.episode_backdrop);
         TextView airDAte = view.findViewById(R.id.air_date);
@@ -131,7 +176,7 @@ public class EpisodeFragment extends DialogFragment implements View.OnClickListe
             }
         });
         comments.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
-        Button close = view.findViewById(R.id.close);
+        ImageView close = view.findViewById(R.id.close);
         Button add = view.findViewById(R.id.add);
         Picasso.get()
                 .load(e.getImage())

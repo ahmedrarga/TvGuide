@@ -84,7 +84,6 @@ public class TrackingAdapter extends
         ImageView image = holder.image;
         final TextView season = holder.season;
         final TextView episodes = holder.episodes;
-        final CheckBox check = holder.check;
         CardView row = holder.row;
         row.setClickable(true);
         row.setOnClickListener(new View.OnClickListener() {
@@ -106,15 +105,7 @@ public class TrackingAdapter extends
                 .into(image);
 
         season.setText(s.getSeason());
-        if(seasons.get(position).isWatched()){
-            check.setChecked(true);
-            Drawable img = context.getResources().getDrawable( R.drawable.ic_checked);
-            check.setButtonDrawable(img);
-        }else{
-            check.setChecked(false);
-            Drawable img = context.getResources().getDrawable( R.drawable.ic_round_uncheck);
-            check.setButtonDrawable(img);
-        }
+
 
 
 
@@ -139,7 +130,6 @@ public class TrackingAdapter extends
         public ImageView image;
         public TextView season;
         public TextView episodes;
-        public CheckBox check;
         public CardView row;
         public TextView info1;
         // We also create a constructor that accepts the entire item row
@@ -151,7 +141,6 @@ public class TrackingAdapter extends
             //nameTextView = (TextView) itemView.findViewById(R.id.movie_name);
             image =  itemView.findViewById(R.id.image);
             season = itemView.findViewById(R.id.season);
-            check = itemView.findViewById(R.id.checkBox);
             row = itemView.findViewById(R.id.row);
             final RowListener rowListener = listener;
             info1 = itemView.findViewById(R.id.info1);
@@ -163,36 +152,9 @@ public class TrackingAdapter extends
                     rowListener.rowClicked(seasons.get(getPosition()));
                 }
             });
-            db = FirebaseFirestore.getInstance();
 
-            check.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    db = FirebaseFirestore.getInstance();
-                    db.collection("trackingSeasons")
-                            .document(mail)
-                            .get()
-                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if(task.isSuccessful()){
-                                        TrackingSeasons t = task.getResult().toObject(TrackingSeasons.class);
-                                        if(t == null){
-                                            t = new TrackingSeasons();
-                                        }
-                                        t.setValue(id, seasons.get(getPosition()).getSeasonNumber());
-                                        db.collection("trackingSeasons")
-                                                .document(mail)
-                                                .set(t);
-                                        check.setChecked(true);
-                                        Drawable img = context.getResources().getDrawable( R.drawable.ic_checked);
-                                        check.setButtonDrawable(img);
-                                        seasons.get(getPosition()).setWatched(true);
-                                    }
-                                }
-                            });
-                }
-            });
+
+
 
         }
 

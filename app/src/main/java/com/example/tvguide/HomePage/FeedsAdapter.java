@@ -1,16 +1,23 @@
 package com.example.tvguide.HomePage;
 
 import android.annotation.SuppressLint;
+import android.app.DownloadManager;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -20,10 +27,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.tvguide.Constants;
 import com.example.tvguide.MovieProfile.MovieProfileActivity;
 import com.example.tvguide.R;
+import com.example.tvguide.User.ProfileActivity;
 import com.example.tvguide.tmdb.Movie;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -34,10 +43,14 @@ import com.squareup.picasso.Picasso;
 
 import org.w3c.dom.Text;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
 public class FeedsAdapter extends
         RecyclerView.Adapter<FeedsAdapter.ViewHolder> {
@@ -150,6 +163,8 @@ public class FeedsAdapter extends
         public TextView time;
         public ImageView profile;
         public VideoView video;
+        public Button download;
+        public LinearLayout user;
         private boolean isPlaying = false;
         // We also create a constructor that accepts the entire item row
         // and does the view lookups to find each subview
@@ -162,6 +177,14 @@ public class FeedsAdapter extends
             name = itemView.findViewById(R.id.name);
             time = itemView.findViewById(R.id.time);
             profile = itemView.findViewById(R.id.profile);
+            user = itemView.findViewById(R.id.user);
+            user.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(context, ProfileActivity.class);
+                    context.startActivity(intent);
+                }
+            });
             video = itemView.findViewById(R.id.video);
             video.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -174,6 +197,34 @@ public class FeedsAdapter extends
 
                 }
             });
+            download = itemView.findViewById(R.id.download);
+            download.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(final View view) {
+                    final String path = posts.get(getPosition()).get("path");
+                    final String[] splitted = path.split("/");
+                    String type= splitted[1];
+                    StorageReference ref = FirebaseStorage.getInstance().getReference(path);
+                    ref.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Uri> task) {
+                            if (task.isSuccessful()) {
+                                downloadFile(splitted[splitted.length - 1], task.getResult());
+                            } else {
+                                Snackbar.make(view, "Error while downloading image", Snackbar.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        public void downloadFile(String filename, Uri uri){
+            DownloadManager downloadManager = (DownloadManager)context.getSystemService(Context.DOWNLOAD_SERVICE);
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalFilesDir(context, DIRECTORY_DOWNLOADS, filename );
+            downloadManager.enqueue(request);
+
         }
 
 

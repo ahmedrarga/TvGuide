@@ -1,6 +1,7 @@
 package com.example.tvguide.MovieProfile;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -15,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,10 +24,16 @@ import com.example.tvguide.R;
 import com.example.tvguide.comment;
 import com.example.tvguide.tmdb.Episode;
 import com.example.tvguide.tmdb.Season;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -97,22 +105,6 @@ public class SeasonFragment extends DialogFragment {
         // Fetch arguments from bundle and set title
         String title = getArguments().getString("title", "Enter Name");
         getDialog().setTitle(title);
-        final Season s = Track.season;
-        TextView name = view.findViewById(R.id.episode_title);
-        ImageView imageView = view.findViewById(R.id.episode_backdrop);
-        TextView airDAte = view.findViewById(R.id.air_date);
-        final TextView overview = view.findViewById(R.id.overview);
-        overview.setClickable(true);
-        overview.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(overview.getMaxLines() == 5){
-                    overview.setMaxLines(40);
-                }else{
-                    overview.setMaxLines(5);
-                }
-            }
-        });
         episodes = view.findViewById(R.id.episodes);
         data = ((MovieProfileActivity)getActivity()).movie.getEpisodes(Track.season);
         episodes.setAdapter(new EpisodeAdapter(data, getContext(), new Track.DialogListener() {
@@ -129,7 +121,62 @@ public class SeasonFragment extends DialogFragment {
         }));
 
         episodes.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
-        Button close = view.findViewById(R.id.close);
+        final Season s = Track.season;
+        final CheckBox checkBox = view.findViewById(R.id.watched);
+        Drawable img = getContext().getResources().getDrawable( R.drawable.ic_round_uncheck);
+        checkBox.setButtonDrawable(img);
+        TextView name = view.findViewById(R.id.episode_title);
+        ImageView imageView = view.findViewById(R.id.episode_backdrop);
+        TextView airDAte = view.findViewById(R.id.air_date);
+        final TextView overview = view.findViewById(R.id.overview);
+        if(s.isWatched()){
+            checkBox.setText("Watched");
+            img = getContext().getResources().getDrawable( R.drawable.ic_checked);
+            checkBox.setButtonDrawable(img);
+        }
+        final FirebaseFirestore db = FirebaseFirestore.getInstance();
+        final String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        checkBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!s.isWatched()) {
+                    db.collection("Tracking")
+                            .document(mail)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        Tracking t = task.getResult().toObject(Tracking.class);
+                                        if (t == null) {
+                                            t = new Tracking();
+                                        }
+                                        t.setSeason(s, data);
+                                        db.collection("Tracking")
+                                                .document(mail)
+                                                .set(t);
+                                        checkBox.setText("Watched");
+                                        Drawable img = getContext().getResources().getDrawable( R.drawable.ic_checked);
+                                        checkBox.setButtonDrawable(img);
+
+                                    }
+                                }
+                            });
+                }
+            }
+        });
+        overview.setClickable(true);
+        overview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(overview.getMaxLines() == 5){
+                    overview.setMaxLines(40);
+                }else{
+                    overview.setMaxLines(5);
+                }
+            }
+        });
+        ImageView close = view.findViewById(R.id.close);
         Picasso.get()
                 .load(s.getImage())
                 .fit()

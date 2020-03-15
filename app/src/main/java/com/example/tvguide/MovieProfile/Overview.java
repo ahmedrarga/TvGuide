@@ -2,9 +2,11 @@ package com.example.tvguide.MovieProfile;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -17,7 +19,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -27,7 +31,11 @@ import com.example.tvguide.GalleryActivity;
 import com.example.tvguide.HomePage.SearchResultsRecyclerAdapter;
 import com.example.tvguide.R;
 import com.example.tvguide.YoutubeAPI;
+import com.example.tvguide.tmdb.Cast;
+import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.youtube.player.YouTubeBaseActivity;
@@ -37,12 +45,16 @@ import com.google.android.youtube.player.YouTubePlayerFragment;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubeThumbnailView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -116,12 +128,60 @@ public class Overview extends Fragment implements View.OnClickListener{
                     root.findViewById(R.id.toDiss).setVisibility(View.GONE);
                     root.findViewById(R.id.toDiss2).setVisibility(View.GONE);
                 }
+                final ImageButton watched = root.findViewById(R.id.watched);
+
+
                 FloatingActionButton btn = root.findViewById(R.id.add);
                 btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         myActivity.addToWatchList(view);
 
+                    }
+                });
+                String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    db.collection("Tracking")
+                            .document(mail)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    Tracking t = task.getResult().toObject(Tracking.class);
+                                    if (myActivity.movie.getMedia_type().equals("tv")) {
+                                        int episodes = myActivity.movie.getEpisodesNumber();
+                                        if (t != null && t.tracking != null && t.tracking.get(String.valueOf(myActivity.movie.getId())) != null) {
+                                            int count = 0;
+                                            for (HashMap<String, String> map : t.tracking.get(String.valueOf(myActivity.movie.getId()))) {
+                                                count++;
+                                            }
+                                            if (count == episodes) {
+                                                Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
+                                                watched.setImageDrawable(img);
+                                                watched.setTooltipText("Watched");
+                                            }
+                                        }
+                                    }else{
+                                        ArrayList<HashMap<String,String>> tmp = t.tracking.get(String.valueOf(myActivity.movie.getId()));
+                                        if(tmp != null)
+                                            if(tmp.size() == 1 && tmp.get(0).get("episode").equals("0")){
+                                                Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
+                                                watched.setImageDrawable(img);
+                                                watched.setTooltipText("Watched");
+
+                                            }
+                                    }
+                                }
+                            });
+
+                watched.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        myActivity.movie.markWatched();
+                        myActivity.addToWatchList(view);
+                        Drawable img = getContext().getResources().getDrawable( R.drawable.ic_checked);
+                        watched.setImageDrawable(img);
+                        watched.setTooltipText("Watched");
                     }
                 });
                 ArrayList<String> arr = myActivity.movie.getGenres();
@@ -180,7 +240,6 @@ public class Overview extends Fragment implements View.OnClickListener{
                             .into(i);
                     TextView s = root.findViewById(R.id.season);
                     s.setText(obj.getString("name"));
-                    root.findViewById(R.id.checkBox).setVisibility(View.INVISIBLE);
                     TextView a = root.findViewById(R.id.info2);
                     a.setVisibility(View.VISIBLE);
                     a.setText(obj.getString("air_date"));
@@ -189,14 +248,26 @@ public class Overview extends Fragment implements View.OnClickListener{
 
                 }
                 RecyclerView cast = root.findViewById(R.id.cast);
-                cast.setAdapter(new CastAdapter(myActivity.movie.getCast(), getContext()));
+                cast.setVisibility(View.GONE);
+                ArrayList<Cast> c = myActivity.movie.getCast();
+                if(c.size() != 0){
+                    root.findViewById(R.id.cast_error).setVisibility(View.GONE);
+                    cast.setVisibility(View.VISIBLE);
+                }
+                cast.setAdapter(new CastAdapter(c, getContext()));
                 cast.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
                 RecyclerView similar = root.findViewById(R.id.similar);
+                similar.setVisibility(View.GONE);
                 String media_type = "show";
                 if(myActivity.movie.getMedia_type().equals("")){
                     media_type = "movie";
                 }
-                similar.setAdapter(new SearchResultsRecyclerAdapter(myActivity.movie.getSimilar(), getContext(), media_type));
+                ArrayList<Movie> sim =  myActivity.movie.getSimilar();
+                if(sim.size() != 0){
+                    root.findViewById(R.id.similar_error).setVisibility(View.GONE);
+                    similar.setVisibility(View.VISIBLE);
+                }
+                similar.setAdapter(new SearchResultsRecyclerAdapter(sim, getContext(), media_type));
                 similar.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
 
                 RecyclerView videos = root.findViewById(R.id.videos);

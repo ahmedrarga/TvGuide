@@ -3,8 +3,9 @@ package com.example.tvguide.tmdb;
 
 import androidx.annotation.NonNull;
 
+import com.example.tvguide.MovieProfile.Track;
+import com.example.tvguide.MovieProfile.Tracking;
 import com.example.tvguide.MovieProfile.TrackingAdapter;
-import com.example.tvguide.MovieProfile.TrackingSeasons;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,20 +32,32 @@ public class Season {
         this.season_id = season_id;
         String m = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("trackingSeasons")
+        db.collection("Tracking")
                 .document(m)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if (task.isSuccessful()) {
-                            TrackingSeasons t = task.getResult().toObject(TrackingSeasons.class);
+                            Tracking t = task.getResult().toObject(Tracking.class);
                             if(t == null){
                                 watched = false;
                             }else{
-                                for(Map<String, Integer> m : t.arrayList){
-                                    if(m.get("id") == id && m.get("season") == season_id){
-                                        watched = true;
+                                if(t.tracking == null){
+                                    watched = false;
+                                }else {
+                                    if(t.tracking.get(String.valueOf(id)) == null){
+                                        watched = false;
+                                    }else{
+                                        ArrayList<HashMap<String, String>> tmp = new ArrayList<>();
+                                        for(HashMap<String, String> hashMap : t.tracking.get(String.valueOf(id))){
+                                            if(hashMap.get("season").equals(String.valueOf(season_id))){
+                                                tmp.add(hashMap);
+                                            }
+                                        }
+                                        if(tmp.size() == getEpisodesNumber()){
+                                            watched = true;
+                                        }
                                     }
                                 }
                             }

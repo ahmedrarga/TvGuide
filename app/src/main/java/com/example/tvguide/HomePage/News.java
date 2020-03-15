@@ -46,6 +46,8 @@ public class News extends Fragment {
     private RecyclerView topRatedM;
     private RecyclerView topRatedS;
     private RecyclerView Upcoming;
+    private RecyclerView trending;
+    private RecyclerView trendingS;
     public static String media_type = "";
     private OnFragmentInteractionListener mListener;
 
@@ -92,12 +94,16 @@ public class News extends Fragment {
             @Override
             public void run() {
                 Requests r = new Requests();
+                trending = root.findViewById(R.id.trendingMovies);
+                trendingS = root.findViewById(R.id.trendingShows);
                 nowPlaying = root.findViewById(R.id.nowPlayingRView);
                 Upcoming = root.findViewById(R.id.upcoming);
                 popularM = root.findViewById(R.id.popularMovies);
                 popularS = root.findViewById(R.id.popularShows);
                 topRatedM = root.findViewById(R.id.topRatedMovies);
                 topRatedS = root.findViewById(R.id.topRatedShows);
+                initRList(trending, r.getTrendingMovies(), "movie");
+                initRList(trendingS, r.getTrendingShows(), "show");
                 initRList(nowPlaying, r.getNowPlaying(), "movie");
                 initRList(Upcoming, r.getUpcoming(), "movie");
                 initRList(popularM, r.getpopularMovies(), "movie");

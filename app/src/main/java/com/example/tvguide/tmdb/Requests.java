@@ -406,4 +406,41 @@ public class Requests {
         }
         return toRet;
     }
+    public List<Movie> getTrendingMovies(){
+        List<Movie> toRet = new ArrayList<>();
+        String query = "https://api.themoviedb.org/3/trending/movie/day?" +
+                "api_key=" + api_key;
+
+        setResponse(query);
+        try{
+            JSONArray array = new JSONObject(response.body().string()).getJSONArray("results");
+            for (int i = 0; i < array.length(); i++){
+                toRet.add(new Movie(array.getJSONObject(i)));
+            }
+        }catch (IOException e1){
+
+        }catch (JSONException e2){
+
+        }
+        return toRet;
+    }
+    public List<Movie> getTrendingShows(){
+        List<Movie> toRet = new ArrayList<>();
+        String query = "https://api.themoviedb.org/3/trending/tv/day?" +
+                "api_key=" + api_key;
+
+        setResponse(query);
+        try{
+            JSONArray array = new JSONObject(response.body().string()).getJSONArray("results");
+            for (int i = 0; i < array.length(); i++){
+                toRet.add(new Movie(array.getJSONObject(i)));
+            }
+        }catch (IOException e1){
+
+        }catch (JSONException e2){
+
+        }
+        return toRet;
+    }
+
 }

@@ -6,7 +6,14 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.example.tvguide.MovieProfile.Track;
+import com.example.tvguide.MovieProfile.Tracking;
 import com.example.tvguide.YoutubeAPI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,6 +22,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -29,6 +37,8 @@ public class Movie implements Parcelable {
     private String media_type;
     private JSONObject obj;
     private ArrayList<Cast> cast;
+    private boolean watched = false;
+    boolean toRet  = false;
 
     public static final Creator<Movie> CREATOR = new Creator<Movie>() {
         @Override
@@ -47,6 +57,7 @@ public class Movie implements Parcelable {
         media_type = dest.readString();
         Requests r = new Requests(id, media_type);
         obj = r.getJson();
+
     }
     public Movie(int id, String name, String overview, String poster_path, String backdrop_path, String media_type){
         this.id = id;
@@ -79,6 +90,90 @@ public class Movie implements Parcelable {
         }catch (JSONException e){
             media_type = "";
         }
+    }
+    public boolean markWatched(){
+
+        final String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        final FirebaseFirestore db = FirebaseFirestore.getInstance();
+        final ArrayList<HashMap<String, String>>  arrayList = new ArrayList<>();
+        HashMap<String,String> map = new HashMap<>();
+        try{
+            if(media_type.equals("tv")) {
+                JSONArray array = obj.getJSONArray("seasons");
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject tmp = array.getJSONObject(i);
+                    int episodes = tmp.getInt("episode_count");
+                    for (int j = 1; j <= episodes; j++) {
+                        map.put("season", tmp.getString("season_number"));
+                        map.put("episode", String.valueOf(j));
+                        arrayList.add(map);
+                        map = new HashMap<>();
+                    }
+                }
+
+
+                db.collection("Tracking")
+                        .document(mail)
+                        .get()
+                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                if (task.isSuccessful()) {
+                                    Tracking t = task.getResult().toObject(Tracking.class);
+                                    if (t == null) {
+                                        t = new Tracking();
+                                    }
+                                    if (t.tracking == null) {
+                                        t.tracking = new HashMap<>();
+                                    }
+                                    t.tracking.put(String.valueOf(id), arrayList);
+                                    db.collection("Tracking")
+                                            .document(mail)
+                                            .set(t);
+                                    toRet = true;
+                                }
+                            }
+                        });
+            }else{
+                db.collection("Tracking")
+                        .document(mail)
+                        .get()
+                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                if(task.isSuccessful()){
+                                    Tracking t = task.getResult().toObject(Tracking.class);
+                                    if (t == null) {
+                                        t = new Tracking();
+                                    }
+                                    if (t.tracking == null) {
+                                        t.tracking = new HashMap<>();
+                                    }
+                                    ArrayList<HashMap<String,String>> arrayList1 = new ArrayList<>();
+                                    HashMap<String,String> map = new HashMap<>();
+                                    map.put("season", "0");
+                                    map.put("episode", "0");
+                                    arrayList1.add(map);
+                                    t.tracking.put(String.valueOf(id), arrayList1);
+                                    db.collection("Tracking")
+                                            .document(mail)
+                                            .set(t);
+                                    toRet = true;
+
+                                }
+                            }
+                        });
+            }
+        }catch (JSONException e){
+
+        }
+        return toRet;
+    }
+
+
+
+    public boolean isWatched() {
+        return watched;
     }
 
     public String getName() {
@@ -119,6 +214,13 @@ public class Movie implements Parcelable {
     public double getRating(){
         try{
             return obj.getDouble("vote_average");
+        }catch (JSONException e){
+            return 0;
+        }
+    }
+    public int getEpisodesNumber(){
+        try{
+            return obj.getInt("number_of_episodes");
         }catch (JSONException e){
             return 0;
         }

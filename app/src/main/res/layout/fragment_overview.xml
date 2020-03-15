@@ -34,20 +34,51 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/homepage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="10dp"
-                android:background="@drawable/round_corner"
-                android:backgroundTint="@color/colorPrimary"
-                android:drawableLeft="@drawable/ic_homepage"
-                android:drawablePadding="10dp"
-                android:padding="5dp"
-                android:text="Open homepage"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/homepage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/round_corner"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:drawableLeft="@drawable/ic_homepage"
+                    android:drawablePadding="10dp"
+                    android:padding="5dp"
+                    android:text="Open homepage"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white" />
+
+                <ImageButton
+                    android:id="@+id/watched"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="10dp"
+                    android:layout_height="@dimen/dimen_40dp"
+                    android:layout_gravity="center|right"
+                    android:layout_marginRight="10dp"
+                    android:layout_weight="1"
+                    android:foregroundGravity="right"
+                    android:src="@drawable/ic_round_uncheck"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white" />
+
+                <TextView
+                    android:id="@+id/watch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:text="Set Watched"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/toDiss2"
@@ -121,6 +152,15 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/cast_error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="20dp"
+                    android:text="Not available"
+                    android:textColor="@color/placeholder" />
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/cast"
                     android:layout_width="match_parent"
@@ -136,6 +176,15 @@
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/similar_error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="20dp"
+                    android:text="Not available"
+                    android:textColor="@color/placeholder" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/similar"
