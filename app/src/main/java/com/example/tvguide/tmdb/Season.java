@@ -72,6 +72,9 @@ public class Season {
     public String getImage(){
         try{
             String path = obj.getString("poster_path");
+            if(path.equals("null")){
+                return "";
+            }
             return url + path;
         }catch (JSONException e){
             return "";

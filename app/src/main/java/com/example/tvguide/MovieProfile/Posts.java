@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -81,22 +83,28 @@ public class Posts extends Fragment {
         // Inflate the layout for this fragment
         final View v =  inflater.inflate(R.layout.fragment_posts, container, false);
         final RecyclerView feeds = v.findViewById(R.id.posts);
-        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-        firestore.collection("posts").document(((MovieProfileActivity)getActivity()).movie.getName())
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful()) {
-                            Post post;
-                            post = task.getResult().toObject(Post.class);
-                            if (post != null) {
-                                feeds.setAdapter(new FeedsAdapter(post.arrayList, getContext()));
-                                feeds.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+                firestore.collection("posts").document(((MovieProfileActivity)getActivity()).movie.getName())
+                        .get()
+                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                if (task.isSuccessful()) {
+                                    Post post;
+                                    post = task.getResult().toObject(Post.class);
+                                    if (post != null) {
+                                        feeds.setAdapter(new FeedsAdapter(post.arrayList, getContext()));
+                                        feeds.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
+                                    }
+                                }
                             }
-                        }
-                    }
-                });
+                        });
+            }
+        });
+
 
 
 

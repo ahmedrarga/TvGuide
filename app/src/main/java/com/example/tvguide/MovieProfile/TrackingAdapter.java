@@ -99,10 +99,16 @@ public class TrackingAdapter extends
         episodes.setText(e);
         holder.info1.setVisibility(View.VISIBLE);
         holder.info1.setText(s.getAirdate());
-
-        Picasso.get()
-                .load(s.getImage())
-                .into(image);
+        String im = s.getImage();
+        if(im.equals("")){
+            Picasso.get()
+                    .load(((MovieProfileActivity)context).movie.getPoster_path())
+                    .into(image);
+        }else {
+            Picasso.get()
+                    .load(im)
+                    .into(image);
+        }
 
         season.setText(s.getSeason());
 

@@ -56,5 +56,34 @@ public class Tracking {
         e.setWatched(true);
         tracking.put(String.valueOf(movie_id), movie);
     }
+    public void removeEpisode(int movie_id, int season, Episode e){
+        HashMap<String, String> map = new HashMap<>();
+        map.put("season", String.valueOf(season));
+        map.put("episode", String.valueOf(e.getEpisodeNumber()));
+        this.tracking.get(String.valueOf(movie_id)).remove(map);
+        e.setWatched(false);
+
+    }
+    public void removeSeason(Season season, List<Episode> episodes){
+        if(tracking == null){
+            tracking = new HashMap<>();
+        }
+
+        HashMap<String, String> t = new HashMap<>();
+        ArrayList<HashMap<String,String>> array = new ArrayList<>(tracking.get(String.valueOf(season.getId())));
+
+        for(HashMap<String,String> m : array){
+            if(m.get("season").equals(String.valueOf(season.getSeasonNumber()))){
+                tracking.get(String.valueOf(season.getId())).remove(m);
+
+            }
+        }
+        for(Episode e : episodes){
+            e.setWatched(false);
+        }
+        season.setWatched(false);
+
+
+    }
 
 }

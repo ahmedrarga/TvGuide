@@ -1,6 +1,8 @@
 package com.example.tvguide;
 
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -49,8 +51,10 @@ public class Database {
     private FirebaseFirestore firestore;
     private FirebaseDatabase realTime;
     Post post;
+    Context context;
 
-    private Database(){
+    private Database(Context context){
+        this.context = context;
         storage = FirebaseStorage.getInstance();
         mAuth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
@@ -58,11 +62,11 @@ public class Database {
 
     }
 
-    public static Database getInstance(){
+    public static Database getInstance(Context context){
         if(db != null){
             return db;
         }
-        return new Database();
+        return new Database(context);
     }
 
     public ArrayList<String> getImagesPaths(String mName){
@@ -120,6 +124,7 @@ public class Database {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                                 // ...
                                 System.out.println("Success ...................................");
+                                Snackbar.make(((Activity)context).getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT);
                             }
                         });
                     }
@@ -158,6 +163,7 @@ public class Database {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                                 // ...
                                 System.out.println("Success ...................................");
+                                Snackbar.make(((Activity)context).getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT);
                             }
                         });
                     }

@@ -139,6 +139,7 @@ public class FeedsAdapter extends
                             @Override
                             public void onSuccess(Uri uri) {
                                 holder.video.setVideoURI(uri);
+                                holder.video.seekTo(1000);
                             }
                         });
             }
@@ -172,6 +173,7 @@ public class FeedsAdapter extends
             // Stores the itemView in a public final member variable that can be used
             // to access the context from any ViewHolder instance.
             super(itemView);
+            setIsRecyclable(false);
             //nameTextView = (TextView) itemView.findViewById(R.id.movie_name);
             image =  itemView.findViewById(R.id.post_image);
             name = itemView.findViewById(R.id.name);

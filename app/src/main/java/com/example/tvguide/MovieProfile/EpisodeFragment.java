@@ -22,6 +22,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -118,7 +119,8 @@ public class EpisodeFragment extends DialogFragment implements View.OnClickListe
         Drawable img = getContext().getResources().getDrawable( R.drawable.ic_round_uncheck);
 
         checkBox.setButtonDrawable(img);
-        if(e.isWatched()){
+        if(e.isWatched() ){
+            e.setWatched(true);
             img = getContext().getResources().getDrawable( R.drawable.ic_checked);
             checkBox.setButtonDrawable(img);
             checkBox.setText("Watched");
@@ -147,6 +149,38 @@ public class EpisodeFragment extends DialogFragment implements View.OnClickListe
                                         checkBox.setText("Watched");
                                         Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
                                         checkBox.setButtonDrawable(img);
+
+
+                                    }
+
+                                }
+                            });
+                }else{
+                    db.collection("Tracking")
+                            .document(mail)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        Tracking t = task.getResult().toObject(Tracking.class);
+                                        if (t == null) {
+                                            t = new Tracking();
+                                        }
+                                        t.removeEpisode(e.getId(), e.getS_id(), e);
+                                        db.collection("Tracking")
+                                                .document(mail)
+                                                .set(t);
+                                        checkBox.setText("Set watched");
+                                        Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
+                                        checkBox.setButtonDrawable(img);
+                                        e.setWatched(false);
+                                        ((MovieProfileActivity)getActivity()).movie.setWatched(false);
+                                        Track.season.setWatched(false);
+                                        CheckBox tmp = SeasonFragment.v.findViewById(R.id.watched);
+                                        tmp.setButtonDrawable(img);
+                                        ImageButton tmp1 = Overview.v.findViewById(R.id.watched);
+                                        tmp1.setImageDrawable(img);
 
                                     }
 
@@ -178,11 +212,20 @@ public class EpisodeFragment extends DialogFragment implements View.OnClickListe
         comments.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
         ImageView close = view.findViewById(R.id.close);
         Button add = view.findViewById(R.id.add);
-        Picasso.get()
-                .load(e.getImage())
-                .fit()
-                .error(R.drawable.ic_person)
-                .into(imageView);
+        String im = e.getImage();
+        if(im.equals("")){
+            Picasso.get()
+                    .load(((MovieProfileActivity)getActivity()).movie.getBackdrop_path())
+                    .fit()
+                    .error(R.drawable.ic_person)
+                    .into(imageView);
+        }else {
+            Picasso.get()
+                    .load(im)
+                    .fit()
+                    .error(R.drawable.ic_person)
+                    .into(imageView);
+        }
         name.setText(e.getEpisode());
         String tmp = e.getAirDate() + " | ";
         airDAte.setText(tmp);

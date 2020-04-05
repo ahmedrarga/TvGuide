@@ -74,6 +74,8 @@ public class Overview extends Fragment implements View.OnClickListener{
     private static final int RECOVERY_DIALOG_REQUEST = 1;
     private List<String> posters;
     private List<String> backdrops;
+    public static View v;
+    ImageButton watched;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -116,7 +118,11 @@ public class Overview extends Fragment implements View.OnClickListener{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View root = inflater.inflate(R.layout.fragment_overview, container, false);
+        v = root;
+
         root.findViewById(R.id.overview_scroll).setVisibility(View.GONE);
+        final MovieProfileActivity myActivity = (MovieProfileActivity)getActivity();
+
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -128,7 +134,7 @@ public class Overview extends Fragment implements View.OnClickListener{
                     root.findViewById(R.id.toDiss).setVisibility(View.GONE);
                     root.findViewById(R.id.toDiss2).setVisibility(View.GONE);
                 }
-                final ImageButton watched = root.findViewById(R.id.watched);
+                watched = root.findViewById(R.id.watched);
 
 
                 FloatingActionButton btn = root.findViewById(R.id.add);
@@ -153,12 +159,18 @@ public class Overview extends Fragment implements View.OnClickListener{
                                         if (t != null && t.tracking != null && t.tracking.get(String.valueOf(myActivity.movie.getId())) != null) {
                                             int count = 0;
                                             for (HashMap<String, String> map : t.tracking.get(String.valueOf(myActivity.movie.getId()))) {
-                                                count++;
+                                                if(!map.get("season").equals("0"))
+                                                    count++;
                                             }
                                             if (count == episodes) {
                                                 Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
                                                 watched.setImageDrawable(img);
                                                 watched.setTooltipText("Watched");
+                                                myActivity.movie.setWatched(true);
+                                            }else{
+                                                Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
+                                                watched.setImageDrawable(img);
+                                                myActivity.movie.setWatched(false);
                                             }
                                         }
                                     }else{
@@ -177,11 +189,19 @@ public class Overview extends Fragment implements View.OnClickListener{
                 watched.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        myActivity.movie.markWatched();
-                        myActivity.addToWatchList(view);
-                        Drawable img = getContext().getResources().getDrawable( R.drawable.ic_checked);
-                        watched.setImageDrawable(img);
-                        watched.setTooltipText("Watched");
+                        if(myActivity.movie.isWatched()){
+                            myActivity.movie.markUnWatched();
+                            Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
+                            watched.setImageDrawable(img);
+
+                        }else {
+                            myActivity.movie.markWatched();
+                            myActivity.addToWatchList(view);
+                            Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
+                            watched.setImageDrawable(img);
+                            watched.setTooltipText("Watched");
+
+                        }
                     }
                 });
                 ArrayList<String> arr = myActivity.movie.getGenres();
@@ -235,9 +255,16 @@ public class Overview extends Fragment implements View.OnClickListener{
                         t.setText("Last episode to air");
                     }
                     ImageView i = root.findViewById(R.id.image);
-                    Picasso.get()
-                            .load(myActivity.movie.IMAGE_PATH + obj.getString("still_path"))
-                            .into(i);
+                    String im = obj.getString("still_path");
+                    if(im.equals("null")){
+                        Picasso.get()
+                                .load(myActivity.movie.getBackdrop_path())
+                                .into(i);
+                    }else {
+                        Picasso.get()
+                                .load(myActivity.movie.IMAGE_PATH + im)
+                                .into(i);
+                    }
                     TextView s = root.findViewById(R.id.season);
                     s.setText(obj.getString("name"));
                     TextView a = root.findViewById(R.id.info2);
@@ -298,6 +325,19 @@ public class Overview extends Fragment implements View.OnClickListener{
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(!((MovieProfileActivity)getActivity()).movie.isWatched()){
+            Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
+            if(watched == null){
+                watched = v.findViewById(R.id.watched);
+            }
+            watched.setImageDrawable(img);
+            watched.setTooltipText("Watched");
         }
     }
 
