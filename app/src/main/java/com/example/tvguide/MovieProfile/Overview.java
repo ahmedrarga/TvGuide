@@ -174,14 +174,16 @@ public class Overview extends Fragment implements View.OnClickListener{
                                             }
                                         }
                                     }else{
-                                        ArrayList<HashMap<String,String>> tmp = t.tracking.get(String.valueOf(myActivity.movie.getId()));
-                                        if(tmp != null)
-                                            if(tmp.size() == 1 && tmp.get(0).get("episode").equals("0")){
-                                                Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
-                                                watched.setImageDrawable(img);
-                                                watched.setTooltipText("Watched");
+                                        if(t != null) {
+                                            ArrayList<HashMap<String, String>> tmp = t.tracking.get(String.valueOf(myActivity.movie.getId()));
+                                            if (tmp != null)
+                                                if (tmp.size() == 1 && tmp.get(0).get("episode").equals("0")) {
+                                                    Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
+                                                    watched.setImageDrawable(img);
+                                                    watched.setTooltipText("Watched");
 
-                                            }
+                                                }
+                                        }
                                     }
                                 }
                             });
