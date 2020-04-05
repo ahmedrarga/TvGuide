@@ -123,7 +123,7 @@ public class FeedsAdapter extends
                     public void onSuccess(Uri uri) {
                         Picasso.get()
                                 .load(uri)
-                                .placeholder(R.drawable.ic_full)
+                               // .placeholder(R.drawable.ic_full)
                                 .resize(800, 800)
                                 .centerCrop()
                                 .into(holder.image);

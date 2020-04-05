@@ -2,10 +2,89 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+
+    android:id="@+id/coord_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
     tools:context=".User.ProfileActivity">
-    <include layout="@layout/activity_base"/>
+
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/circleImage"
+        android:layout_width="266dp"
+        android:layout_height="225dp"
+        android:layout_marginLeft="250px" />
+
+    <TextView
+        android:id="@+id/textviewEmailAddress"
+        android:layout_width="156dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginLeft="30dp"
+        android:layout_marginBottom="150dp"
+        android:text="Email"
+        android:textColor="@color/common_google_signin_btn_text_dark_default"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        tools:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textviewfirstname"
+        android:layout_width="156dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginLeft="1dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginRight="1dp"
+        android:layout_marginBottom="150dp"
+        android:text="FirstName"
+        android:textColor="@color/common_google_signin_btn_text_dark_default"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textviewlastname"
+        android:layout_width="156dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginLeft="150dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="150dp"
+        android:text="Lastname"
+        android:textColor="@color/common_google_signin_btn_text_dark_default"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:textStyle="bold" />
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+<!--
+
+
+    <ImageView
+        android:id="@+id/profile_pic_imageView"
+        android:layout_width="match_parent"
+        android:layout_height="182dp"
+        android:gravity="center_vertical"
+        android:src="@drawable/rounded_fg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+android:src="@drawable/defavatar"
+android:foreground="@drawable/rounded_fg"/>
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    tools:context=".User.ProfileActivity">
+
+    <include layout="@layout/activity_base" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+-->

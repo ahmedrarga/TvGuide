@@ -31,8 +31,6 @@ public class resetPassword extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_password);
         initToolbar("Reset password");
-
-
     }
 
     @Override

@@ -3,15 +3,11 @@ package com.example.tvguide.HomePage;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 
-import com.example.tvguide.Database;
 import com.example.tvguide.NewPostActivity;
-import com.example.tvguide.SettingsActivity;
+import com.example.tvguide.Account.SettingsActivity;
 import com.example.tvguide.User.DiscoverActivity;
 import com.example.tvguide.Account.MainActivity;
 import com.example.tvguide.User.ProfileActivity;
@@ -21,8 +17,6 @@ import com.example.tvguide.Account.resetPassword;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import android.os.Handler;
@@ -57,7 +51,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.net.InetAddress;

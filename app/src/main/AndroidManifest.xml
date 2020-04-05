@@ -21,7 +21,7 @@
         <activity android:name=".GalleryActivity"></activity>
         <activity android:name=".ImageActivity" />
         <activity
-            android:name=".SettingsActivity"
+            android:name=".Account.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:parentActivityName=".BaseActivity"
             >
