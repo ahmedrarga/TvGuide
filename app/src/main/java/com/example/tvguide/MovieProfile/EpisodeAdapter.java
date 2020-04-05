@@ -67,9 +67,16 @@ public class EpisodeAdapter extends
         final TextView episodes = holder.e;
 
         final Episode e = this.episodes.get(position);
-        Picasso.get()
-                .load(e.getImage())
-                .into(image);
+        String im = e.getImage();
+        if(im.equals("")){
+            Picasso.get()
+                    .load(((MovieProfileActivity)context).movie.getBackdrop_path())
+                    .into(image);
+        }else {
+            Picasso.get()
+                    .load(im)
+                    .into(image);
+        }
 
         season.setText(e.getEpisode());
         String ep = e.getAirDate();

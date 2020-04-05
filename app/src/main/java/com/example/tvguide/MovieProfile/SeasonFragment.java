@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -52,6 +53,8 @@ public class SeasonFragment extends DialogFragment {
     private static final String ARG_PARAM2 = "param2";
     RecyclerView episodes;
     List<Episode> data;
+    CheckBox checkBox;
+    public static View v;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -101,7 +104,7 @@ public class SeasonFragment extends DialogFragment {
     public void onViewCreated(@NonNull final View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // Get field from view
-
+        v = view;
         // Fetch arguments from bundle and set title
         String title = getArguments().getString("title", "Enter Name");
         getDialog().setTitle(title);
@@ -122,14 +125,15 @@ public class SeasonFragment extends DialogFragment {
 
         episodes.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
         final Season s = Track.season;
-        final CheckBox checkBox = view.findViewById(R.id.watched);
+        checkBox = view.findViewById(R.id.watched);
         Drawable img = getContext().getResources().getDrawable( R.drawable.ic_round_uncheck);
         checkBox.setButtonDrawable(img);
         TextView name = view.findViewById(R.id.episode_title);
         ImageView imageView = view.findViewById(R.id.episode_backdrop);
         TextView airDAte = view.findViewById(R.id.air_date);
         final TextView overview = view.findViewById(R.id.overview);
-        if(s.isWatched()){
+        if(s.isWatched() || ((MovieProfileActivity)getActivity()).movie.isWatched()){
+            s.setWatched(true);
             checkBox.setText("Watched");
             img = getContext().getResources().getDrawable( R.drawable.ic_checked);
             checkBox.setButtonDrawable(img);
@@ -159,9 +163,36 @@ public class SeasonFragment extends DialogFragment {
                                         Drawable img = getContext().getResources().getDrawable( R.drawable.ic_checked);
                                         checkBox.setButtonDrawable(img);
 
+
                                     }
                                 }
                             });
+                } else{
+                    db.collection("Tracking")
+                            .document(mail)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        Tracking t = task.getResult().toObject(Tracking.class);
+                                        if (t == null) {
+                                            t = new Tracking();
+                                        }
+                                        t.removeSeason(s, data);
+                                        db.collection("Tracking")
+                                                .document(mail)
+                                                .set(t);
+                                        checkBox.setText("Set watched");
+                                        Drawable img = getContext().getResources().getDrawable( R.drawable.ic_round_uncheck);
+                                        checkBox.setButtonDrawable(img);
+                                        ImageButton tmp = Overview.v.findViewById(R.id.watched);
+                                        tmp.setImageDrawable(img);
+
+                                    }
+                                }
+                            });
+
                 }
             }
         });
@@ -177,11 +208,20 @@ public class SeasonFragment extends DialogFragment {
             }
         });
         ImageView close = view.findViewById(R.id.close);
-        Picasso.get()
-                .load(s.getImage())
-                .fit()
-                .error(R.drawable.ic_person)
-                .into(imageView);
+        String im = s.getImage();
+        if(im.equals("")){
+            Picasso.get()
+                    .load(((MovieProfileActivity)getActivity()).movie.getPoster_path())
+                    .fit()
+                    .into(imageView);
+        }else{
+            Picasso.get()
+                    .load(im)
+                    .fit()
+                    .into(imageView);
+        }
+
+
         name.setText(s.getSeason());
         String tmp = s.getAirdate();
         airDAte.setText(tmp);
@@ -201,6 +241,15 @@ public class SeasonFragment extends DialogFragment {
 
 
 
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(!Track.season.isWatched()){
+            Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
+            checkBox.setButtonDrawable(img);
+            checkBox.setTooltipText("Watched");
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event

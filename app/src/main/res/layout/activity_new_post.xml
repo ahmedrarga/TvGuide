@@ -43,6 +43,7 @@
 
         <Button
             android:id="@+id/upload_image"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
@@ -50,10 +51,11 @@
             android:onClick="onClick"
             android:text="Upload image"
             android:textAllCaps="false"
-            tools:visibility="invisible" />
+            tools:visibility="gone" />
 
         <Button
             android:id="@+id/upload_video"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
@@ -61,7 +63,7 @@
             android:onClick="onClick"
             android:text="Upload video"
             android:textAllCaps="false"
-            tools:visibility="invisible" />
+            tools:visibility="gone" />
 
         <Button
             android:id="@+id/post"
@@ -70,7 +72,7 @@
             android:background="@drawable/round_corner"
             android:text="Post"
             android:textAllCaps="false"
-            android:visibility="invisible" />
+            android:visibility="gone" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -222,12 +222,17 @@ public class HomeActivity extends AppCompatActivity
         movies = requests.getMovies();
         ((SearchResultsRecyclerAdapter)rView.getAdapter()).updateData(movies);
         rView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+
     }
 
     @Override
     public void onBackPressed() {
         if(mSearchView.isSearchOpen()) {
             mSearchView.closeSearch();
+            rView.setVisibility(View.GONE);
+            tabLayout.setVisibility(View.VISIBLE);
+            viewPager.setVisibility(View.VISIBLE);
+
         }else{
             super.onBackPressed();
         }
@@ -244,10 +249,11 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onSearchClosed() {
         mArrowDrawable.toggle();
-        rView.setVisibility(View.GONE);
-        tabLayout.setVisibility(View.VISIBLE);
-        viewPager.setVisibility(View.VISIBLE);
-
+        if(!flag) {
+            rView.setVisibility(View.GONE);
+            tabLayout.setVisibility(View.VISIBLE);
+            viewPager.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -262,27 +268,36 @@ public class HomeActivity extends AppCompatActivity
     public void onSearchTermChanged(CharSequence term) {
         final String query = term.toString();
         handler = new Handler();
-
-        handler.postDelayed(new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 getMovies(query);
                 if(flag)
                     rView.setVisibility(View.VISIBLE);
-                    tabLayout.setVisibility(View.GONE);
-                    viewPager.setVisibility(View.GONE);
+                tabLayout.setVisibility(View.GONE);
+                viewPager.setVisibility(View.GONE);
                 flag = false;
             }
-        }, 1000);
+        });
+
 
     }
 
     @Override
     public void onSearch(CharSequence text) {
         mArrowDrawable.toggle();
-        getMovies(text.toString());
-        if(flag)
+        if(text.toString().isEmpty()){
+            rView.setVisibility(View.GONE);
+            tabLayout.setVisibility(View.VISIBLE);
+            viewPager.setVisibility(View.VISIBLE);
+        }else {
             rView.setVisibility(View.VISIBLE);
+            tabLayout.setVisibility(View.GONE);
+            viewPager.setVisibility(View.GONE);
+            flag = true;
+        }
+        getMovies(text.toString());
+
     }
     @Override
     public void OnNavigationIconClick() {

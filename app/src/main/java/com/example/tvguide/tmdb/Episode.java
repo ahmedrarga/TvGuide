@@ -2,6 +2,7 @@ package com.example.tvguide.tmdb;
 
 import androidx.annotation.NonNull;
 
+import com.example.tvguide.MovieProfile.MovieProfileActivity;
 import com.example.tvguide.MovieProfile.Tracking;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -62,7 +63,11 @@ public class Episode {
 
     public String getImage(){
         try{
-            return IMAGE_PATH + obj.getString("still_path");
+            String s = obj.getString("still_path");
+            if(s.equals("null")){
+                return "";
+            }
+            return IMAGE_PATH + s;
         }catch (JSONException e){
             System.out.println(e.getMessage());
             return "";

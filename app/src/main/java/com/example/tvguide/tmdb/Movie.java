@@ -130,7 +130,7 @@ public class Movie implements Parcelable {
                                     db.collection("Tracking")
                                             .document(mail)
                                             .set(t);
-                                    toRet = true;
+                                    watched = true;
                                 }
                             }
                         });
@@ -158,7 +158,7 @@ public class Movie implements Parcelable {
                                     db.collection("Tracking")
                                             .document(mail)
                                             .set(t);
-                                    toRet = true;
+                                    watched = true;
 
                                 }
                             }
@@ -169,8 +169,40 @@ public class Movie implements Parcelable {
         }
         return toRet;
     }
+    public void markUnWatched(){
+        final String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        final FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("Tracking")
+                .document(mail)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            Tracking t = task.getResult().toObject(Tracking.class);
+                            if(t==null){
+                                t = new Tracking();
 
+                            }
+                            ArrayList<HashMap<String, String>> m = new ArrayList<>(t.tracking.get(String.valueOf(id)));
+                            if(m != null) {
+                                for (HashMap<String, String> map : m) {
+                                    t.tracking.get(String.valueOf(id)).remove(map);
+                                }
+                            }
+                            db.collection("Tracking")
+                                    .document(mail)
+                                    .set(t);
+                            watched = false;
+                        }
+                    }
+                });
 
+    }
+
+    public void setWatched(boolean watched) {
+        this.watched = watched;
+    }
 
     public boolean isWatched() {
         return watched;

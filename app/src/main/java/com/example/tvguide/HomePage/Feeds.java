@@ -58,7 +58,6 @@ public class Feeds extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private ArrayList<Map<String, Object>> movies;
     final ArrayList<Map<String,String>> data = new ArrayList<>();
 
     // TODO: Rename and change types of parameters
@@ -111,7 +110,34 @@ public class Feeds extends Fragment {
         feeds = v.findViewById(R.id.feeds_rec);
         feeds.setAdapter(new FeedsAdapter(data, getContext()));
         feeds.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
-        new task().execute("");
+        ((HomeActivity)getActivity()).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                WatchlistActivity.getWatchList(new WatchlistListener() {
+                    @Override
+                    public void Watchlist(List<Movie> movies) {
+                        watchlist.addAll(movies);
+                        for(Movie m : watchlist){
+                            firestore.collection("posts").document(m.getName())
+                                    .get()
+                                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                            if (task.isSuccessful()) {
+                                                Post post;
+                                                post = task.getResult().toObject(Post.class);
+                                                if (post != null) {
+                                                    data.addAll(post.arrayList);
+                                                    ((FeedsAdapter)feeds.getAdapter()).notifyDataSetChanged();
+                                                }
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
+            }
+        });
 
 
 
@@ -126,44 +152,7 @@ public class Feeds extends Fragment {
     }
 
 
-    public class task extends AsyncTask<String, Void, Response> {
 
-        private Response response;
-
-        @Override
-        protected Response doInBackground(String... strings) {
-            WatchlistActivity.getWatchList(new WatchlistListener() {
-                @Override
-                public void Watchlist(List<Movie> movies) {
-                    watchlist.addAll(movies);
-                    for(Movie m : watchlist){
-                        firestore.collection("posts").document(m.getName())
-                                .get()
-                                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                        if (task.isSuccessful()) {
-                                            Post post;
-                                            post = task.getResult().toObject(Post.class);
-                                            if (post != null) {
-                                                data.addAll(post.arrayList);
-                                                ((FeedsAdapter)feeds.getAdapter()).notifyDataSetChanged();
-                                            }
-                                        }
-                                    }
-                                });
-                    }
-                }
-            });
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Response response) {
-            super.onPostExecute(response);
-        }
-
-    }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {

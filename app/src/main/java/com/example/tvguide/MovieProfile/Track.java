@@ -11,6 +11,8 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,18 +91,24 @@ public class Track extends Fragment {
         // Inflate the layout for this fragment
         final View root = inflater.inflate(R.layout.fragment_track, container, false);
         myActivity = (MovieProfileActivity)getActivity();
-        final RecyclerView track = root.findViewById(R.id.tracking);
-        final RecyclerView episodes = root.findViewById(R.id.episodes);
-        episodes.setVisibility(View.GONE);
-        final ArrayList<Season> seasons = myActivity.movie.getSeasons();
-        track.setAdapter(new TrackingAdapter(seasons, getContext(), myActivity.movie.getId(), new RowListener() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
-            public void rowClicked(Season season) {
-                Track.season = season;
-                showSeasonDialog();
+            public void run() {
+                final RecyclerView track = root.findViewById(R.id.tracking);
+                final RecyclerView episodes = root.findViewById(R.id.episodes);
+                episodes.setVisibility(View.GONE);
+                final ArrayList<Season> seasons = myActivity.movie.getSeasons();
+                track.setAdapter(new TrackingAdapter(seasons, getContext(), myActivity.movie.getId(), new RowListener() {
+                    @Override
+                    public void rowClicked(Season season) {
+                        Track.season = season;
+                        showSeasonDialog();
+                    }
+                }));
+                track.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
             }
-        }));
-        track.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
+        });
+
         return root;
     }
 

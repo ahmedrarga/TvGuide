@@ -25,9 +25,6 @@ public class NewPostAdapter extends
     private Context context;
     private String cl;
     NewPostListener mListener;
-    public NewPostAdapter(NewPostListener listener){
-        mListener = listener;
-    }
     public NewPostAdapter(List<Movie> movies, Context context, NewPostListener listener){
         this.movies = movies;
         this.context = context;
