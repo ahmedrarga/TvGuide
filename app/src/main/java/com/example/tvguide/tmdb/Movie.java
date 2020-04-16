@@ -91,6 +91,27 @@ public class Movie implements Parcelable {
             media_type = "";
         }
     }
+    public Movie(JSONObject obj, String media_type) {
+        try {
+            this.obj = obj;
+            id = Integer.parseInt(obj.getString("id"));
+            overview = obj.getString("overview");
+            poster_path = IMAGE_PATH + obj.getString("poster_path");
+            backdrop_path = IMAGE_PATH + obj.getString("backdrop_path");
+            switch (media_type) {
+                case "movie":
+                    name = obj.getString("title");
+                    this.media_type = "movie";
+                    break;
+                case "tv":
+                    name = obj.getString("name");
+                    this.media_type = "tv";
+                    break;
+            }
+        }catch (JSONException e){
+            media_type = "tv";
+        }
+    }
     public boolean markWatched(){
 
         final String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();

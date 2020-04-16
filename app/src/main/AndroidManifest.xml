@@ -11,29 +11,34 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
-        android:supportsRtl="false"
-        tools:replace="android:supportsRtl"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
-        android:theme="@style/MyMaterialTheme">
-        <activity android:name=".GalleryActivity"></activity>
+        android:supportsRtl="false"
+        android:theme="@style/MyMaterialTheme"
+        tools:replace="android:supportsRtl">
+        <activity android:name=".Account.RatingsActivity"></activity>
+        <activity android:name=".User.ProfileActivity" />
+        <activity android:name=".GalleryActivity" />
         <activity android:name=".ImageActivity" />
         <activity
             android:name=".Account.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".BaseActivity"
-            >
+            android:parentActivityName=".BaseActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.tvguide.BaseActivity" />
+
         </activity>
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity android:name=".NewPostActivity" />
         <activity android:name=".EpisodeActivity" />
         <activity android:name=".BaseActivity" />
         <activity android:name=".User.WatchlistActivity" />
-        <activity android:name=".User.ProfileActivity" />
         <activity android:name=".Account.resetPassword" />
         <activity
             android:name=".HomePage.HomeActivity"

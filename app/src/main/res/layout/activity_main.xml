@@ -156,6 +156,15 @@
                     android:text="Create new Account"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white" />
+
+                <Button
+                    android:id="@+id/button2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:onClick="try_"
+                    android:text="Button" />
             </RelativeLayout>
         </LinearLayout>
     </LinearLayout>

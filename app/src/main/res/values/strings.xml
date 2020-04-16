@@ -54,6 +54,7 @@
     <string name="lbl_choose_from_gallery">Choose from gallery</string>
     <string name="toast_image_intent_null">Image picker option is missing!</string>
     <string name="title_activity_scrolling">ScrollingActivity</string>
+    <string name="backgroundcolor">#082D3F</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
 

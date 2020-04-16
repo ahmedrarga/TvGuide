@@ -1,11 +1,10 @@
 package com.example.tvguide.HomePage;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,43 +14,49 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
+import com.example.tvguide.Post;
 import com.example.tvguide.R;
+import com.example.tvguide.User.WatchlistActivity;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link News.OnFragmentInteractionListener} interface
+ * {@link Images.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link News#newInstance} factory method to
+ * Use the {@link Images#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class News extends Fragment {
+public class Images extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-    private RecyclerView nowPlaying;
-    private RecyclerView popularM;
-    private RecyclerView popularS;
-    private RecyclerView topRatedM;
-    private RecyclerView topRatedS;
-    private RecyclerView Upcoming;
-    private RecyclerView trending;
-    private RecyclerView trendingS;
-    public static String media_type = "";
+    final List<Movie> watchlist = new ArrayList<>();
+    final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+    final FirebaseStorage storage = FirebaseStorage.getInstance();
+    static RecyclerView feeds;
+    static ArrayList<Map<String,String>> data = new ArrayList<>();
+    static ProgressBar progressBar;
+
     private OnFragmentInteractionListener mListener;
 
-    public News() {
+    public Images() {
         // Required empty public constructor
     }
 
@@ -61,11 +66,11 @@ public class News extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment News.
+     * @return A new instance of fragment Images.
      */
     // TODO: Rename and change types and number of parameters
-    public static News newInstance(String param1, String param2) {
-        News fragment = new News();
+    public static Images newInstance(String param1, String param2) {
+        Images fragment = new Images();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -77,8 +82,7 @@ public class News extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+
         }
 
 
@@ -88,32 +92,29 @@ public class News extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View root = inflater.inflate(R.layout.fragment_news, container, false);
-        root.findViewById(R.id.news).setVisibility(View.GONE);
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
+        feeds = root.findViewById(R.id.feeds_rec);
+        feeds.setAdapter(new FeedsAdapter(data, getContext()));
+        feeds.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
+        progressBar = root.findViewById(R.id.progressBar5);
+        /*new Thread(new Runnable() {
             @Override
             public void run() {
-                Requests r = new Requests();
-                trending = root.findViewById(R.id.trendingMovies);
-                trendingS = root.findViewById(R.id.trendingShows);
-                nowPlaying = root.findViewById(R.id.nowPlayingRView);
-                Upcoming = root.findViewById(R.id.upcoming);
-                popularM = root.findViewById(R.id.popularMovies);
-                popularS = root.findViewById(R.id.popularShows);
-                topRatedM = root.findViewById(R.id.topRatedMovies);
-                topRatedS = root.findViewById(R.id.topRatedShows);
-                initRList(trending, r.getTrendingMovies(), "movie");
-                initRList(trendingS, r.getTrendingShows(), "show");
-                initRList(nowPlaying, r.getNowPlaying(), "movie");
-                initRList(Upcoming, r.getUpcoming(), "movie");
-                initRList(popularM, r.getpopularMovies(), "movie");
-                initRList(popularS, r.getpopularShows(), "show");
-                initRList(topRatedM, r.getTopRatedMovies(), "movie");
-                initRList(topRatedS, r.getTopRatedShows(), "show");
-                root.findViewById(R.id.news).setVisibility(View.VISIBLE);
-                root.findViewById(R.id.progressBar3).setVisibility(View.GONE);
+                while(true) {
+                    if (HomeActivity.countImages > 0) {
+                        progressBar.setVisibility(View.GONE);
+                        root.findViewById(R.id.message).setVisibility(View.VISIBLE);
+                    }
+                    if (HomeActivity.countImages == 0) {
+                        progressBar.setVisibility(View.GONE);
+                        root.findViewById(R.id.message).setVisibility(View.VISIBLE);
+                    }
+                }
+
             }
-        });
+        }).start();*/
+        // todo: Split posts to videos and images
+
+
 
 
 
@@ -139,10 +140,7 @@ public class News extends Fragment {
                     + " must implement OnFragmentInteractionListener");
         }
     }
-    private void initRList(RecyclerView r, List<Movie> movies, String cl){
-        r.setAdapter(new SearchResultsRecyclerAdapter(movies, getContext(), cl));
-        r.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-    }
+
 
     @Override
     public void onDetach() {

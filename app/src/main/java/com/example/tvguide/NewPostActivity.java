@@ -2,6 +2,7 @@ package com.example.tvguide;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,12 +17,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.tvguide.HomePage.CropFragment;
 import com.example.tvguide.HomePage.HomeActivity;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
@@ -44,7 +49,9 @@ import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.DexterError;
 import com.karumi.dexter.listener.PermissionRequestErrorListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.oginotihiro.cropview.CropView;
 import com.squareup.picasso.Picasso;
+import com.yalantis.ucrop.UCrop;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -57,7 +64,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NewPostActivity extends BaseActivity implements View.OnClickListener {
+public class NewPostActivity extends BaseActivity implements View.OnClickListener
+                                                    ,CropFragment.OnFragmentInteractionListener{
     private Requests r;
     private ArrayList<Map<String, Object>> map;
     private List<Movie> movies;
@@ -66,7 +74,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
     Button uploadIm;
     Button uploadV;
     Snackbar snackbar;
-
+    CropView cropView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +85,11 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
         uploadV = findViewById(R.id.upload_video);
         uploadV.setVisibility(View.GONE);
         uploadIm.setVisibility(View.GONE);
+        cropView = (CropView) findViewById(R.id.cropView);
+        final ProgressBar progressBar = findViewById(R.id.progressBar4);
+        final TextView message = findViewById(R.id.message);
+        message.setVisibility(View.GONE);
+
         Handler handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
             @Override
@@ -94,10 +107,17 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                                             map = (ArrayList)task.getResult().getData().get("listOfMovies");
                                             r = new Requests();
                                             movies = r.getMoviesFromHashMap(map);
-                                            initRList();
+                                            if(movies.size() == 0){
+                                                progressBar.setVisibility(View.GONE);
+                                                message.setVisibility(View.VISIBLE);
+                                            }else {
+                                                initRList();
+                                            }
+
 
                                         }catch (NullPointerException e){
-
+                                            progressBar.setVisibility(View.GONE);
+                                            message.setVisibility(View.VISIBLE);
                                         }
                                     }
                                 }
@@ -126,16 +146,29 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                 ImageView image = findViewById(R.id.choosed);
                 Picasso.get()
                         .load(choosed.getPoster_path())
+                        .fit()
                         .into(image);
+                ((CardView)findViewById(R.id.card_image)).setForegroundGravity(Gravity.CENTER);
+                image.setVisibility(View.VISIBLE);
                 view.setVisibility(View.GONE);
-                ((TextView)findViewById(R.id.selectText)).setText("You choosed");
+                TextView text = findViewById(R.id.selectText);
+                text.setText(choosed.getName());
+                text.setGravity(Gravity.CENTER);
                 uploadV.setVisibility(View.VISIBLE);
                 uploadIm.setVisibility(View.VISIBLE);
 
 
             }
         }));
+        findViewById(R.id.progressBar4).setVisibility(View.GONE);
+        view.setVisibility(View.VISIBLE);
         view.setLayoutManager(new LinearLayoutManager(getApplicationContext(), RecyclerView.HORIZONTAL, false));
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+        startActivity(intent);
     }
 
     public void onClick(View view) {
@@ -207,39 +240,36 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
         if (resultCode == this.RESULT_CANCELED) {
             return;
         }
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        snackbar = Snackbar.make(getWindow().getDecorView().getRootView(), "Uploading", Snackbar.LENGTH_SHORT);
-        snackbar.show();
+
 
         if (requestCode == 1) {
             if (data != null) {
                 Uri contentURI = data.getData();
-
-                try {
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
-
-
-                    db.uploadImagePost(choosed.getName(), bitmap, "images", dtf.format(now));
-                }catch (FileNotFoundException e){
-                    System.out.println(e.getMessage());
-                }catch (IOException e1){
-                    System.out.println(e1.getMessage());
-                }
-
-
+                showCropFragment(contentURI, false);
             }
 
         } else if (requestCode == 0) {
             if (data != null) {
-                Snackbar.make(getWindow().getDecorView().getRootView(), "Uploading..", Snackbar.LENGTH_INDEFINITE).show();
+                snackbar = Snackbar.make(getWindow().getDecorView().getRootView(), "Uploading..", Snackbar.LENGTH_INDEFINITE);
+                snackbar.show();
                 Uri contentURI = data.getData();
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+                LocalDateTime now = LocalDateTime.now();
                 db.uploadVideoPost(choosed.getName(), contentURI, "videos", dtf.format(now));
 
 
 
             }
         }
+    }
+
+    @Override
+    public void onFragmentInteraction(Bitmap bitmap, boolean isCover) {
+        snackbar = Snackbar.make(getWindow().getDecorView().getRootView(), "Uploading", Snackbar.LENGTH_SHORT);
+        snackbar.show();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        db.uploadImagePost(choosed.getName(), bitmap, "images", dtf.format(now));
     }
 
 
@@ -318,6 +348,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                                     // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                                     // ...
                                     System.out.println("Success ...................................");
+                                    snackbar.dismiss();
                                     Snackbar.make(getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT);
                                 }
                             });
@@ -357,6 +388,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                                     // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                                     // ...
                                     System.out.println("Success ...................................");
+                                    snackbar.dismiss();
                                     Snackbar.make(getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT);
                                 }
                             });
@@ -365,7 +397,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                     });
         }
 
-        public synchronized ArrayList<Uri> getImagePosts(final String movie){
+        public ArrayList<Uri> getImagePosts(final String movie){
             final ArrayList<Uri> arrayList = new ArrayList<>();
             firestore.collection("posts").document(movie)
                     .get()
@@ -400,6 +432,10 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
         }
 
 
+    }
+    public void showCropFragment(Uri uri, boolean isCover){
+        CropFragment fragment = CropFragment.newInstance(uri.toString(), isCover);
+        fragment.show(getSupportFragmentManager(), "Crop");
     }
 
 }

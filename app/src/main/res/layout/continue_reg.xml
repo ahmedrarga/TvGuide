@@ -40,20 +40,6 @@
         app:srcCompat="@drawable/ic_person" />
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="30dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/round_corner"
-        android:capitalize="none"
-        android:onClick="uploadPhoto"
-        android:text="Upload"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white" />
-
-    <Button
         android:id="@+id/skip"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="match_parent"

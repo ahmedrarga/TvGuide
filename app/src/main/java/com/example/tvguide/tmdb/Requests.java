@@ -79,6 +79,26 @@ public class Requests {
         }
         return array;
     }
+    public List<Movie> getMovies(String media_type){
+        List<Movie> list = new ArrayList<>();
+        if(response == null){
+            return null;
+        }
+        int page = 1;
+        JSONArray array = getResults();
+        try {
+            for (int i = 0; i < array.length(); i++) {
+                try {
+                    list.add(new Movie((JSONObject) array.get(i), media_type));
+                } catch (JSONException e) {
+                    System.out.println("Error in getMovies " + e.getMessage());
+                }
+            }
+        } catch (NullPointerException e) {
+            return list;
+        }
+        return list;
+    }
     public List<Movie> getMovies(){
         List<Movie> list = new ArrayList<>();
         if(response == null){
@@ -161,7 +181,7 @@ public class Requests {
             System.out.println(e2.getMessage());
             return null;
         }
-        return getMovies();
+        return getMovies("movie");
     }
     public List<Movie> discoverShows(){
         String query = "https://api.themoviedb.org/3/discover/tv?" +
@@ -176,7 +196,7 @@ public class Requests {
             System.out.println(e2.getMessage());
             return null;
         }
-        return getMovies();
+        return getMovies("movie");
     }
     public List<Movie> getNowPlaying(){
         String query = "https://api.themoviedb.org/3/movie/" +
@@ -191,7 +211,7 @@ public class Requests {
             System.out.println(e2.getMessage());
             return null;
         }
-        return getMovies();
+        return getMovies("movie");
 
 
     }
@@ -200,7 +220,7 @@ public class Requests {
                 "api_key=" + api_key +
                 "&language=en-US&page=1";
         setResponse(query);
-        return getMovies();
+        return getMovies("movie");
 
     }
     public List<Movie> getpopularMovies(){
@@ -208,28 +228,28 @@ public class Requests {
                 "api_key=" + api_key +
                 "&language=en-US&page=1";
         setResponse(query);
-        return getMovies();
+        return getMovies("movie");
     }
     public List<Movie> getpopularShows(){
         String query = "https://api.themoviedb.org/3/tv/popular?" +
                 "api_key=" + api_key +
                 "&language=en-US&page=1";
         setResponse(query);
-        return getMovies();
+        return getMovies("tv");
     }
     public List<Movie> getTopRatedMovies(){
         String query = "https://api.themoviedb.org/3/movie/top_rated?" +
                 "api_key=" + api_key +
                 "&language=en-US&page=1";
         setResponse(query);
-        return getMovies();
+        return getMovies("tv");
     }
     public List<Movie> getTopRatedShows(){
         String query = "https://api.themoviedb.org/3/tv/top_rated?" +
                 "api_key=" + api_key +
                 "&language=en-US&page=1";
         setResponse(query);
-        return getMovies();
+        return getMovies("tv");
     }
 
 
@@ -341,7 +361,7 @@ public class Requests {
             JSONArray array = ((JSONArray)obj.get("results"));
             for(int i = 0; i < array.length(); i++){
                 JSONObject tmp = (JSONObject)array.getJSONObject(i);
-                movies.add(new Movie(tmp));
+                movies.add(new Movie(tmp, media_type));
             }
         }catch (IOException e1){
 

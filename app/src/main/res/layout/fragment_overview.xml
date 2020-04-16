@@ -55,29 +55,22 @@
                     android:textAllCaps="false"
                     android:textColor="@android:color/white" />
 
-                <ImageButton
-                    android:id="@+id/watched"
-                    style="@style/Widget.AppCompat.Button.Borderless"
-                    android:layout_width="10dp"
-                    android:layout_height="@dimen/dimen_40dp"
-                    android:layout_gravity="center|right"
-                    android:layout_marginRight="10dp"
-                    android:layout_weight="1"
-                    android:foregroundGravity="right"
-                    android:src="@drawable/ic_round_uncheck"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white" />
-
-                <TextView
-                    android:id="@+id/watch"
+                <Button
+                    android:id="@+id/rate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:layout_margin="10dp"
                     android:layout_weight="1"
-                    android:text="Set Watched"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:background="@drawable/round_corner"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:drawableLeft="@drawable/ic_star"
+                    android:drawablePadding="10dp"
+                    android:padding="5dp"
+                    android:text="Rate"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white" />
+
             </LinearLayout>
 
             <TextView

@@ -1,4 +1,4 @@
-package com.example.tvguide;
+package com.example.tvguide.HomePage;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -11,24 +11,27 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.tvguide.MovieProfile.MovieProfileActivity;
 import com.example.tvguide.R;
 import com.example.tvguide.tmdb.Movie;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-
-public class NewPostAdapter extends
-        RecyclerView.Adapter<NewPostAdapter.ViewHolder> {
+public class PosterAdapter extends
+        RecyclerView.Adapter<PosterAdapter.ViewHolder> {
 
     private List<Movie> movies;
     private Context context;
     private String cl;
-    NewPostListener mListener;
-    public NewPostAdapter(List<Movie> movies, Context context, NewPostListener listener){
+    public PosterAdapter(List<Movie> movies, Context context, String cl){
         this.movies = movies;
         this.context = context;
-        mListener = listener;
+        this.cl = cl;
+    }
+    public void updateData(List<Movie> list){
+        movies = list;
     }
 
     @NonNull
@@ -41,7 +44,7 @@ public class NewPostAdapter extends
         // Inflate the custom layout
         View movieView = inflater.inflate(R.layout.poster_movie, parent, false);
         // Return a new holder instance
-        final ViewHolder viewHolder = new ViewHolder(movieView, mListener);
+        final ViewHolder viewHolder = new ViewHolder(movieView);
         return viewHolder;
     }
 
@@ -54,10 +57,13 @@ public class NewPostAdapter extends
         // Set item views based on your views and data model
         //TextView textView = holder.nameTextView;
         // textView.setText(movie.getName());
-        ImageView image = holder.text;
+        ImageView image = holder.image;
         Picasso.get()
                 .load(movie.getPoster_path())
-                .into(image);
+                .fit()
+                .into(holder.image);
+        System.out.println(movie.getName() + "  sdl;knfaksldfnlKSDNL;DMVl;sdkjgf;lwE");
+        holder.title.setText(movie.getName());
 
 
 
@@ -72,24 +78,35 @@ public class NewPostAdapter extends
         // Your holder should contain a member variable
         // for any view that will be set as you render a row
         //public TextView nameTextView;
-        public ImageView text;
-        private NewPostListener mListener;
+        public ImageView image;
+        public TextView title;
         // We also create a constructor that accepts the entire item row
         // and does the view lookups to find each subview
-        public ViewHolder(View itemView, NewPostListener listener) {
+        public ViewHolder(View itemView) {
             // Stores the itemView in a public final member variable that can be used
             // to access the context from any ViewHolder instance.
             super(itemView);
             //nameTextView = (TextView) itemView.findViewById(R.id.movie_name);
-            text =  itemView.findViewById(R.id.movie_image);
-            text.setOnClickListener(this);
-            mListener = listener;
+            image =  itemView.findViewById(R.id.movie_image);
+            title = itemView.findViewById(R.id.title);
+            image.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            mListener.clicked(movies.get(getPosition()));
-
+            String media_type = "";
+            if(cl.equals("movie"))
+                media_type = "movie";
+            else if (cl.equals("show")){
+                media_type = "tv";
+            }
+            else
+                media_type = movies.get(getPosition()).getMedia_type();
+            Intent intent = new Intent(context, MovieProfileActivity.class);
+            intent.putExtra("id", movies.get(this.getPosition()).getId());
+            intent.putExtra("media_type",  media_type);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
         }
     }
 

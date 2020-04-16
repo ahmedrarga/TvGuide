@@ -23,7 +23,9 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 
+import com.example.tvguide.BaseActivity;
 import com.example.tvguide.Constants;
+import com.example.tvguide.HomePage.CropFragment;
 import com.example.tvguide.HomePage.HomeActivity;
 import com.example.tvguide.R;
 import com.firebase.ui.auth.User;
@@ -48,6 +50,7 @@ import com.karumi.dexter.listener.DexterError;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.PermissionRequestErrorListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseActivity implements CropFragment.OnFragmentInteractionListener {
     private FirebaseFirestore db;
     private TextInputLayout Currfirstname;
     private  TextInputLayout Currlastname;
@@ -65,26 +68,17 @@ public class SettingsActivity extends AppCompatActivity {
     private ProgressDialog dialog;
     private Uri contentURI;
     private ImageView img;
+    boolean isCover = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings_activity);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.settings, new SettingsFragment())
-                .commit();
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        initToolbar("Setting");
+
+
     }
 
-    public static class SettingsFragment extends PreferenceFragmentCompat {
-        @Override
-        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-            setPreferencesFromResource(R.xml.root_preferences, rootKey);
-        }
-    }
+
 
     public void Change_Name(View view){
         Currfirstname = findViewById(R.id.currfirstname);
@@ -102,6 +96,8 @@ public class SettingsActivity extends AppCompatActivity {
                     String id = result.getDocuments().get(0).getId();
                     db.collection("users").document(id).update("FIRST_NAME", fName);
                     db.collection("users").document(id).update("LAST_NAME", lName);
+                    String n = fName + " " + lName;
+                    HomeActivity.name.setText(n);
                 }
             });
 
@@ -120,26 +116,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     public void selectPhoto1(View v){
         requestMultiplePermissions();
-        android.app.AlertDialog.Builder pictureDialog = new AlertDialog.Builder(this);
-        pictureDialog.setTitle("Select Action");
-        String[] pictureDialogItems = {
-                "Select photo from gallery",
-                "Capture photo from camera" };
-        pictureDialog.setItems(pictureDialogItems,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                choosePhotoFromGallary();
-                                break;
-                            case 1:
-                                takePhotoFromCamera();
-                                break;
-                        }
-                    }
-                });
-        pictureDialog.show();
+        isCover = false;
+        choosePhotoFromGallary();
+    }
+    public void selectPhoto2(View v){
+        requestMultiplePermissions();
+        isCover = true;
+        choosePhotoFromGallary();
     }
     public void choosePhotoFromGallary() {
         Intent galleryIntent = new Intent(Intent.ACTION_PICK,
@@ -163,15 +146,7 @@ public class SettingsActivity extends AppCompatActivity {
             if (data != null) {
                 contentURI = data.getData();
                 flag = true;
-                try {
-
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
-                    img.setImageBitmap(bitmap);
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getApplicationContext(), "Failed!", Toast.LENGTH_SHORT).show();
-                }
+                showCropFragment(contentURI, isCover);
             }
 
         } else if (requestCode == 0) {
@@ -179,6 +154,10 @@ public class SettingsActivity extends AppCompatActivity {
             img.setImageBitmap(thumbnail);
             flag = true;
         }
+    }
+    public void showCropFragment(Uri uri, boolean isCover){
+        CropFragment fragment = CropFragment.newInstance(uri.toString(), isCover);
+        fragment.show(getSupportFragmentManager(), "Crop");
     }
 
     private void  requestMultiplePermissions(){
@@ -219,7 +198,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
 
-    public void uploadPhoto1(View v){
+    public void uploadPhoto1(final Bitmap bitmap){
         if(flag) {
             dialog = new ProgressDialog(this);
             dialog.setCanceledOnTouchOutside(false);
@@ -230,59 +209,95 @@ public class SettingsActivity extends AppCompatActivity {
             }catch (InterruptedException e){
 
             }
-
-
-            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
             String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+            StorageReference ref = storageReference.child("images/" + mail + "/profile.jpg");
 
-
-            final StorageReference ref = storageReference.child("images/" + mail + "/profile.jpg");
-
-            img.setDrawingCacheEnabled(true);
-            img.buildDrawingCache();
-            Bitmap bitmap = ((BitmapDrawable) img.getDrawable()).getBitmap();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            final byte[] data = baos.toByteArray();
+            byte[] data = baos.toByteArray();
 
-
-            Task<Void> deleteTask = ref.delete();
-            deleteTask.addOnSuccessListener(new OnSuccessListener<Void>() {
+            UploadTask uploadTask = ref.putBytes(data);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
-                public void onSuccess(Void aVoid) {
-                    UploadTask uploadTask = ref.putBytes(data);
-                    uploadTask.addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            // Handle unsuccessful uploads
-                            Toast.makeText(getApplicationContext(), "Failed " + exception.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-                            // ...
-                            Snackbar.make(getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT).show();
-                            flag = false;
-                            //Button btn = findViewById(R.id.skip);
-                            //btn.setText("Done");
-                            findViewById(R.id.button).setVisibility(View.GONE);
-                            dialog.dismiss();
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle unsuccessful uploads
+                    Toast.makeText(getApplicationContext(), "Failed " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                    // ...
+                    Snackbar.make(getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT).show();
+                    flag = false;
+                    HomeActivity.profile.setImageBitmap(bitmap);
 
-                        }
-                    }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
-                            double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                            System.out.println("Upload is " + progress + "% done");
-                            int currentprogress = (int) progress;
-                            dialog.setMessage("Uploading.. " + currentprogress + " %");
-                        }
-                    });
+                    dialog.dismiss();
+
+                }
+            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    System.out.println("Upload is " + progress + "% done");
+                    int currentprogress = (int) progress;
+                    dialog.setMessage("Uploading.. " + currentprogress + " %");
                 }
             });
+        }else {
+            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        }
+    }
 
+    public void uploadPhoto2(final Bitmap bitmap){
+        if(flag) {
+            dialog = new ProgressDialog(this);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.setMessage("Uploading..");
+            dialog.show();
+            try{
+                Thread.sleep(2000);
+            }catch (InterruptedException e){
 
+            }
+            String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+            StorageReference ref = storageReference.child("images/" + mail + "/cover.jpg");
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] data = baos.toByteArray();
+
+            UploadTask uploadTask = ref.putBytes(data);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle unsuccessful uploads
+                    Toast.makeText(getApplicationContext(), "Failed " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                    // ...
+                    Snackbar.make(getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT).show();
+                    flag = false;
+                    HomeActivity.cover.setImageBitmap(bitmap);
+                    dialog.dismiss();
+
+                }
+            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    System.out.println("Upload is " + progress + "% done");
+                    int currentprogress = (int) progress;
+                    dialog.setMessage("Uploading.. " + currentprogress + " %");
+                }
+            });
         }else {
             Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -291,6 +306,16 @@ public class SettingsActivity extends AppCompatActivity {
     }
     public void backPressed(View v) {
         onBackPressed();
+    }
+
+    @Override
+    public void onFragmentInteraction(Bitmap bitmap, boolean isCover) {
+        if(isCover){
+            uploadPhoto2(bitmap);
+        }else{
+            uploadPhoto1(bitmap);
+        }
+
     }
 }
 

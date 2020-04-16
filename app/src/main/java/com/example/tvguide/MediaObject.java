@@ -1,52 +1,28 @@
 package com.example.tvguide;
 
 public class MediaObject {
+    String path;
+    String user;
 
-    private String title;
-    private String media_url;
-    private String thumbnail;
-    private String description;
-
-    public MediaObject(String title, String media_url, String thumbnail, String description) {
-        this.title = title;
-        this.media_url = media_url;
-        this.thumbnail = thumbnail;
-        this.description = description;
+    public MediaObject(String path, String user){
+        this.path = path;
+        this.user = user;
     }
 
-    public MediaObject() {
+    public String getPath() {
+        return path;
     }
 
-    public String getTitle() {
-        return title;
+    public String getUser() {
+        return user;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setPath(String path) {
+        this.path = path;
     }
 
-    public String getMedia_url() {
-        return media_url;
-    }
-
-    public void setMedia_url(String media_url) {
-        this.media_url = media_url;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getThumbnail() {
-        return thumbnail;
-    }
-
-    public void setThumbnail(String thumbnail) {
-        this.thumbnail = thumbnail;
+    public void setUser(String user) {
+        this.user = user;
     }
 }
 

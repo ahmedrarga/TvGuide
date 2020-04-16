@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -57,8 +58,10 @@ public class SearchResultsRecyclerAdapter extends
         //TextView textView = holder.nameTextView;
        // textView.setText(movie.getName());
         ImageView image = holder.image;
+        System.out.println(movie.getPoster_path() + " lhkjhbvvuyvgyuvgjftfytfcjd ydyrd gjd     ydjydjydtjytd jyd jy");
         Picasso.get()
                 .load(movie.getPoster_path())
+                .fit()
                 .into(holder.image);
 
 

@@ -1,77 +1,55 @@
-package com.example.tvguide.HomePage;
+package com.example.tvguide.Account;
 
 import android.content.Context;
+import android.media.Rating;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.VideoView;
+import android.widget.ImageView;
+import android.widget.RatingBar;
+import android.widget.TextView;
 
-import com.example.tvguide.Database;
-import com.example.tvguide.Post;
 import com.example.tvguide.R;
-import com.example.tvguide.User.WatchlistActivity;
 import com.example.tvguide.tmdb.Movie;
-import com.example.tvguide.tmdb.Requests;
-import com.firebase.ui.firestore.FirestoreRecyclerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.ListResult;
-import com.google.firebase.storage.StorageReference;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+import com.squareup.picasso.Picasso;
+import com.stepstone.stepper.Step;
+import com.stepstone.stepper.VerificationError;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link Feeds.OnFragmentInteractionListener} interface
+ * {@link StepFragmentSample.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link Feeds#newInstance} factory method to
+ * Use the {@link StepFragmentSample#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class Feeds extends Fragment {
+public class StepFragmentSample extends Fragment implements Step {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    final ArrayList<Map<String,String>> data = new ArrayList<>();
 
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    final List<Movie> watchlist = new ArrayList<>();
-    final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-    final FirebaseStorage storage = FirebaseStorage.getInstance();
-    RecyclerView feeds;
-
 
     private OnFragmentInteractionListener mListener;
 
-    public Feeds() {
+    public StepFragmentSample() {
         // Required empty public constructor
     }
 
@@ -81,11 +59,11 @@ public class Feeds extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment Feeds.
+     * @return A new instance of fragment StepFragmentSample.
      */
     // TODO: Rename and change types and number of parameters
-    public static Feeds newInstance(String param1, String param2) {
-        Feeds fragment = new Feeds();
+    public static StepFragmentSample newInstance(String param1, String param2) {
+        StepFragmentSample fragment = new StepFragmentSample();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -106,53 +84,45 @@ public class Feeds extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        final View v =  inflater.inflate(R.layout.fragment_feeds, container, false);
-        feeds = v.findViewById(R.id.feeds_rec);
-        feeds.setAdapter(new FeedsAdapter(data, getContext()));
-        feeds.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
-        ((HomeActivity)getActivity()).runOnUiThread(new Runnable() {
+        View v = inflater.inflate(R.layout.fragment_step_fragment_sample, container, false);
+        Bundle args = getArguments();
+        int pos = args.getInt("curr_pos");
+        final Movie movie = RatingsActivity.movies.get(pos);
+        ImageView image = v.findViewById(R.id.image);
+        Picasso
+                .get()
+                .load(movie.getPoster_path())
+                .fit()
+                .into(image);
+        TextView title = v.findViewById(R.id.title);
+        title.setText(movie.getName());
+        RatingBar ratingBar = v.findViewById(R.id.ratingBar);
+        ratingBar.setNumStars(5);
+        ratingBar.setStepSize((float) 0.5);
+        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
-            public void run() {
-                WatchlistActivity.getWatchList(new WatchlistListener() {
-                    @Override
-                    public void Watchlist(List<Movie> movies) {
-                        watchlist.addAll(movies);
-                        for(Movie m : watchlist){
-                            firestore.collection("posts").document(m.getName())
-                                    .get()
-                                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                            if (task.isSuccessful()) {
-                                                Post post;
-                                                post = task.getResult().toObject(Post.class);
-                                                if (post != null) {
-                                                    data.addAll(post.arrayList);
-                                                    ((FeedsAdapter)feeds.getAdapter()).notifyDataSetChanged();
-                                                }
-                                            }
-                                        }
-                                    });
-                        }
-                    }
-                });
+            public void onRatingChanged(RatingBar ratingBar, final float v, boolean b) {
+                final FirebaseFirestore db = FirebaseFirestore.getInstance();
+                final String m = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                db.collection("ratings")
+                        .document(m)
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                rating r = documentSnapshot.toObject(rating.class);
+                                if(r == null){
+                                    r = new rating();
+                                    r.arrayList = new ArrayList<>();
+                                }
+                                r.setValue(String.valueOf(movie.getId()), String.valueOf(v));
+                                db.collection("ratings").document(m).set(r);
+                            }
+                        });
             }
         });
-
-
-
-
-
-
-
-
-
-
         return v;
     }
-
-
-
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -178,6 +148,22 @@ public class Feeds extends Fragment {
         mListener = null;
     }
 
+    @Nullable
+    @Override
+    public VerificationError verifyStep() {
+        return null;
+    }
+
+    @Override
+    public void onSelected() {
+
+    }
+
+    @Override
+    public void onError(@NonNull VerificationError error) {
+
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -192,8 +178,4 @@ public class Feeds extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
-    public interface WatchlistListener {
-        void Watchlist(List<Movie> movies);
-    }
 }
-

@@ -26,9 +26,9 @@ public class FragmentAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return new News();
+                return new Images();
             case 1:
-                return new Feeds();
+                return new Videos();
 
             default:
                 return null;

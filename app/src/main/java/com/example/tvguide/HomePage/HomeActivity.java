@@ -6,8 +6,10 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 
+import com.example.tvguide.MediaObject;
 import com.example.tvguide.NewPostActivity;
 import com.example.tvguide.Account.SettingsActivity;
+import com.example.tvguide.Post;
 import com.example.tvguide.User.DiscoverActivity;
 import com.example.tvguide.Account.MainActivity;
 import com.example.tvguide.User.ProfileActivity;
@@ -17,6 +19,7 @@ import com.example.tvguide.Account.resetPassword;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import android.os.Handler;
@@ -34,6 +37,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -56,10 +60,11 @@ import android.widget.TextView;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity
         implements PersistentSearchView.OnSearchListener, PersistentSearchView.OnIconClickListener,
-        NavigationView.OnNavigationItemSelectedListener, Feeds.OnFragmentInteractionListener, News.OnFragmentInteractionListener {
+        NavigationView.OnNavigationItemSelectedListener, Videos.OnFragmentInteractionListener, Images.OnFragmentInteractionListener {
     private final String TAG = "HomeActivity";
     private static final int VOICE_RECOGNITION_CODE = 9999;
     boolean flag = true;
@@ -78,6 +83,17 @@ public class HomeActivity extends AppCompatActivity
     private TabLayout tabLayout;
     private ViewPager viewPager;
     private Snackbar snackbar;
+    final List<Movie> watchlist = new ArrayList<>();
+    final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+    final FirebaseStorage storage = FirebaseStorage.getInstance();
+    RecyclerView feeds;
+    static int countImages = 0, countVideos = 0;
+    String n = "";
+    static int id = 1;
+    public static TextView name;
+    public static  TextView email;
+    public static ImageView profile;
+    public static ImageView cover;
 
 
 
@@ -85,38 +101,16 @@ public class HomeActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        /*snackbar = Snackbar.make(getWindow().getDecorView().getRootView(), "Check your Internet connection", Snackbar.LENGTH_INDEFINITE);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true) {
-                    try {
-                        Thread.sleep(5000);
-                        if(!isInternetAvailable()){
-                            if(!snackbar.isShown()){
-                                snackbar.show();
-                                connected = false;
-                            }
-                        }else{
-                            connected = true;
 
-                        }
-                    } catch (InterruptedException e) {
-
-                    }
-                }
-
-            }
-        }).start();*/
         if (mAuth.getCurrentUser() == null) {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
+            finish();
         } else {
-            ImageView p_pack = findViewById(R.id.back_profile);
-           // Picasso.get()
-             //       .load(R.mipmap.icon_full)
-               //     .into(p_pack);
+            // Picasso.get()
+            //       .load(R.mipmap.icon_full)
+            //     .into(p_pack);
             tabLayout = findViewById(R.id.tabLayout);
             viewPager = findViewById(R.id.viewPAger);
             final FragmentAdapter adapter = new FragmentAdapter(this, getSupportFragmentManager(), tabLayout.getTabCount());
@@ -128,6 +122,7 @@ public class HomeActivity extends AppCompatActivity
                 @Override
                 public void onTabSelected(TabLayout.Tab tab) {
                     viewPager.setCurrentItem(tab.getPosition());
+
                 }
 
                 @Override
@@ -143,7 +138,6 @@ public class HomeActivity extends AppCompatActivity
 
             rView = findViewById(R.id.rView);
             rView.setAdapter(new SearchResultsRecyclerAdapter(movies, getApplicationContext(), "Home"));
-
             mArrowDrawable = new DrawerArrowDrawable(this);
 
             mDrawer = findViewById(R.id.drawer_layout);
@@ -154,6 +148,10 @@ public class HomeActivity extends AppCompatActivity
                 }
             });
             mMicEnabled = isIntentAvailable(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH));
+            name = findViewById(R.id.name);
+            email = findViewById(R.id.email_feild);
+            cover = findViewById(R.id.cover_profile);
+            profile = findViewById(R.id.back_profile);
 
 
             mSearchView = findViewById(R.id.search_bar);
@@ -163,6 +161,49 @@ public class HomeActivity extends AppCompatActivity
             NavigationView navigationView = findViewById(R.id.nav_view);
             navigationView.setNavigationItemSelectedListener(this);
             navigationView.setCheckedItem(navigationView.getMenu().getItem(0).setChecked(true));
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    WatchlistActivity.getWatchList(new Videos.WatchlistListener() {
+                        @Override
+                        public void Watchlist(List<Movie> movies) {
+                            watchlist.addAll(movies);
+                            for (Movie m : watchlist) {
+                                firestore.collection("posts").document(m.getName())
+                                        .get()
+                                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    com.example.tvguide.Post post;
+                                                    post = task.getResult().toObject(Post.class);
+                                                    if (post != null) {
+                                                        for (Map<String, String> m : post.arrayList) {
+                                                            final String[] path = m.get("path").split("/");
+                                                            if (path[1].equals("images")) {
+                                                                countImages++;
+                                                                Images.data.add(m);
+                                                                Images.progressBar.setVisibility(View.GONE);
+                                                                Images.feeds.setVisibility(View.VISIBLE);
+                                                                Images.feeds.getAdapter().notifyDataSetChanged();
+                                                            } else {
+                                                                countVideos++;
+                                                                final MediaObject mediaObject = new MediaObject(m.get("path"), m.get("user"));
+                                                                Videos.videoInfoList.add(mediaObject);
+                                                                Videos.mAdapter.notifyDataSetChanged();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        });
+                            }
+                        }
+                    });
+                }
+            });
+
+
             Handler handler = new Handler(getMainLooper());
             handler.post(new Runnable() {
                 @Override
@@ -180,11 +221,12 @@ public class HomeActivity extends AppCompatActivity
                                     if (task.isSuccessful()) {
                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                             Log.d(TAG, document.getId() + " => " + document.getData());
-                                            TextView name = findViewById(R.id.name);
-                                            TextView mail = findViewById(R.id.email_feild);
+
+                                            name = findViewById(R.id.name);
+                                            email = findViewById(R.id.email_feild);
                                             String n = document.getData().get("FIRST_NAME").toString() + " " + document.getData().get("LAST_NAME").toString();
                                             name.setText(n);
-                                            mail.setText(document.getData().get("EMAIL").toString());
+                                            email.setText(document.getData().get("EMAIL").toString());
                                         }
                                     } else {
                                         Log.d(TAG, "Error getting documents: ", task.getException());
@@ -197,19 +239,28 @@ public class HomeActivity extends AppCompatActivity
                     pRef.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
                         @Override
                         public void onComplete(@NonNull Task<Uri> task) {
-                            if(task.isSuccessful()){
-                                ImageView im = findViewById(R.id.back_profile);
+                            if (task.isSuccessful()) {
+                                profile = findViewById(R.id.back_profile);
                                 Picasso.get()
                                         .load(task.getResult())
                                         .fit()
-                                        .into(im);
+                                        .into(profile);
                             }
+                        }
+                    });
+                    pRef = ref.child("images/" + m + "/cover.jpg");
+                    pRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            cover = findViewById(R.id.cover_profile);
+                            Picasso.get()
+                                    .load(uri)
+                                    .fit()
+                                    .into(cover);
                         }
                     });
                 }
             });
-
-
         }
     }
 
@@ -268,7 +319,7 @@ public class HomeActivity extends AppCompatActivity
     public void onSearchTermChanged(CharSequence term) {
         final String query = term.toString();
         handler = new Handler();
-        runOnUiThread(new Runnable() {
+        handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 getMovies(query);
@@ -278,7 +329,7 @@ public class HomeActivity extends AppCompatActivity
                 viewPager.setVisibility(View.GONE);
                 flag = false;
             }
-        });
+        }, 300);
 
 
     }

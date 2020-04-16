@@ -21,6 +21,7 @@ import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
@@ -209,6 +210,37 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
                         FloatingActionButton btn = findViewById(R.id.add);
                         Drawable img = getApplicationContext().getResources().getDrawable( R.drawable.ic_done);
                         btn.setImageDrawable(img);
+                    }
+                }
+            });
+        }else{
+            db = FirebaseFirestore.getInstance();
+            final String m = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+            db.collection("watchlist")
+                    .document(m)
+                    .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if(task.isSuccessful()){
+                        DocumentSnapshot doc = task.getResult();
+                        if (doc.exists()) {
+                            System.out.println("DocumentSnapshot data: " + doc.getData().get("listOfMovies"));
+                            ArrayList<HashMap<String, Object>> arrayList = (ArrayList<HashMap<String, Object>>) doc.getData().get("listOfMovies");
+                            ArrayList<HashMap<String,Object>> tmp = new ArrayList<>(arrayList);
+                            for(HashMap<String, Object> t : tmp){
+                                if((long) t.get("id") == id && ((String)t.get("media_type")).equals(media_type)){
+                                    arrayList.remove(t);
+                                }
+                            }
+                            Map<String, Object> ma = new HashMap<>();
+                            ma.put("listOfMovies", arrayList);
+                            db.collection("watchlist").document(m).set(ma);
+                            FloatingActionButton btn = findViewById(R.id.add);
+                            Drawable img = getApplicationContext().getResources().getDrawable( R.drawable.ic_plus);
+                            btn.setImageDrawable(img);
+                            isInWatchlist = false;
+
+                        }
                     }
                 }
             });

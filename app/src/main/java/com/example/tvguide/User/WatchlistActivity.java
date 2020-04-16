@@ -12,7 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.tvguide.BaseActivity;
-import com.example.tvguide.HomePage.Feeds;
+import com.example.tvguide.HomePage.Videos;
 import com.example.tvguide.HomePage.SearchResultsRecyclerAdapter;
 import com.example.tvguide.R;
 import com.example.tvguide.tmdb.Movie;
@@ -101,7 +101,7 @@ public class WatchlistActivity extends BaseActivity {
             super.onBackPressed();
         }
     }
-    public static List<Movie> getWatchList(final Feeds.WatchlistListener listener){
+    public static List<Movie> getWatchList(final Videos.WatchlistListener listener){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String u = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         db.collection("watchlist").document(u).

@@ -23,6 +23,7 @@ import android.widget.ScrollView;
 import android.widget.Toast;
 
 import com.example.tvguide.Constants;
+import com.example.tvguide.HomePage.CropFragment;
 import com.example.tvguide.HomePage.HomeActivity;
 import com.example.tvguide.R;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -54,7 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
+public class RegisterActivity extends AppCompatActivity implements View.OnClickListener, CropFragment.OnFragmentInteractionListener {
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private ProgressDialog dialog;
@@ -168,26 +169,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     }
     public void selectPhoto(View v){
         requestMultiplePermissions();
-        AlertDialog.Builder pictureDialog = new AlertDialog.Builder(this);
-        pictureDialog.setTitle("Select Action");
-        String[] pictureDialogItems = {
-                "Select photo from gallery",
-                "Capture photo from camera" };
-        pictureDialog.setItems(pictureDialogItems,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                choosePhotoFromGallary();
-                                break;
-                            case 1:
-                                takePhotoFromCamera();
-                                break;
-                        }
-                    }
-                });
-        pictureDialog.show();
+        choosePhotoFromGallary();
     }
     public void choosePhotoFromGallary() {
         Intent galleryIntent = new Intent(Intent.ACTION_PICK,
@@ -200,6 +182,10 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, 0);
     }
+    public void showCropFragment(Uri uri){
+        CropFragment fragment = CropFragment.newInstance(uri.toString(), false);
+        fragment.show(getSupportFragmentManager(), "Crop");
+    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -211,14 +197,9 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             if (data != null) {
                 contentURI = data.getData();
                 flag = true;
-                try {
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), contentURI);
-                    img.setImageBitmap(bitmap);
+                showCropFragment(contentURI);
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getApplicationContext(), "Failed!", Toast.LENGTH_SHORT).show();
-                }
+
             }
 
         } else if (requestCode == 0) {
@@ -267,7 +248,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 .onSameThread()
                 .check();
     }
-    public void uploadPhoto(View v){
+    public void uploadPhoto(Bitmap bitmap){
         if(flag) {
             dialog = new ProgressDialog(this);
             dialog.setCanceledOnTouchOutside(false);
@@ -282,9 +263,6 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             StorageReference storageReference = FirebaseStorage.getInstance().getReference();
             StorageReference ref = storageReference.child("images/" + mail + "/profile.jpg");
 
-            img.setDrawingCacheEnabled(true);
-            img.buildDrawingCache();
-            Bitmap bitmap = ((BitmapDrawable) img.getDrawable()).getBitmap();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
             byte[] data = baos.toByteArray();
@@ -305,7 +283,6 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     flag = false;
                     Button btn = findViewById(R.id.skip);
                     btn.setText("Done");
-                    findViewById(R.id.button).setVisibility(View.GONE);
                     dialog.dismiss();
 
                 }
@@ -319,7 +296,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 }
             });
         }else {
-            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+            Intent intent = new Intent(getApplicationContext(), RatingsActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         }
@@ -327,4 +304,9 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     }
 
 
+
+    @Override
+    public void onFragmentInteraction(Bitmap bitmap, boolean isCover) {
+        uploadPhoto(bitmap);
+    }
 }

@@ -1,90 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-
-    android:id="@+id/coord_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
     tools:context=".User.ProfileActivity">
 
-
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/circleImage"
-        android:layout_width="266dp"
-        android:layout_height="225dp"
-        android:layout_marginLeft="250px" />
-
-    <TextView
-        android:id="@+id/textviewEmailAddress"
-        android:layout_width="156dp"
-        android:layout_height="40dp"
-        android:layout_gravity="center"
-        android:layout_marginLeft="30dp"
-        android:layout_marginBottom="150dp"
-        android:text="Email"
-        android:textColor="@color/common_google_signin_btn_text_dark_default"
-        android:textSize="15dp"
-        android:textStyle="bold"
-        tools:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/textviewfirstname"
-        android:layout_width="156dp"
-        android:layout_height="40dp"
-        android:layout_gravity="center"
-        android:layout_marginLeft="1dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginRight="1dp"
-        android:layout_marginBottom="150dp"
-        android:text="FirstName"
-        android:textColor="@color/common_google_signin_btn_text_dark_default"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        tools:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/textviewlastname"
-        android:layout_width="156dp"
-        android:layout_height="40dp"
-        android:layout_gravity="center"
-        android:layout_marginLeft="150dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginBottom="150dp"
-        android:text="Lastname"
-        android:textColor="@color/common_google_signin_btn_text_dark_default"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        tools:textStyle="bold" />
-
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
-<!--
-
-
-    <ImageView
-        android:id="@+id/profile_pic_imageView"
-        android:layout_width="match_parent"
-        android:layout_height="182dp"
-        android:gravity="center_vertical"
-        android:src="@drawable/rounded_fg"
+    <FrameLayout
+        android:id="@+id/Fra"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
-android:src="@drawable/defavatar"
-android:foreground="@drawable/rounded_fg"/>
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background"
-    tools:context=".User.ProfileActivity">
 
-    <include layout="@layout/activity_base" />
+        <ImageView
+            android:id="@+id/cover"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            android:clickable="false"
+            android:gravity="bottom"
+            android:minHeight="180dp"
+            android:orientation="vertical"
+            android:scaleType="centerCrop"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
--->
+        <ImageView
+            android:id="@+id/back_butt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:src="@drawable/ic_back" />
+
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="93dp"
+            android:layout_height="93dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="140dp"
+            android:maxHeight="70dp"
+            app:cardBackgroundColor="@color/background"
+            app:cardCornerRadius="5dp">
+
+            <ImageView
+                android:id="@+id/profile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:maxHeight="70dp" />
+
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="115dp"
+            android:layout_marginTop="180dp"
+            android:layout_marginRight="10dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="5dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="20dp"
+                    android:lines="2"
+                    android:maxLines="2"
+                    android:minLines="1"
+                    android:paddingRight="20dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/email"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/placeholder"
+                        android:textStyle="bold" />
+
+
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

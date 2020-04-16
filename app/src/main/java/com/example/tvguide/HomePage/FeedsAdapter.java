@@ -24,6 +24,8 @@ import android.widget.VideoView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.tvguide.Constants;
 import com.example.tvguide.MovieProfile.MovieProfileActivity;
 import com.example.tvguide.R;
@@ -92,8 +94,6 @@ public class FeedsAdapter extends
                     if (task.isSuccessful()) {
                         Picasso.get()
                                 .load(task.getResult())
-                                .resize(60, 60)
-                                .centerCrop()
                                 .placeholder(R.drawable.ic_person)
                                 .into(holder.profile);
                     }
@@ -108,43 +108,37 @@ public class FeedsAdapter extends
                         public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                             for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                                 String n = document.getData().get("FIRST_NAME").toString() + " " + document.getData().get("LAST_NAME").toString();
-                                String text = n + " • " + path[0];
-                                holder.name.setText(text);
+
+                                holder.name.setText(n);
+                                holder.movieName.setText(path[0]);
                             }
 
                         }
                     });
-            if (path[1].equals("images")) {
-                holder.video.setVisibility(View.GONE);
-                holder.image.setVisibility(View.VISIBLE);
-                StorageReference iRef = storage.getReference(post.get("path"));
-                iRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        Picasso.get()
-                                .load(uri)
-                               // .placeholder(R.drawable.ic_full)
-                                .resize(800, 800)
-                                .centerCrop()
-                                .into(holder.image);
-
-                    }
-                });
-            } else {
-                holder.video.setVisibility(View.VISIBLE);
-                holder.image.setVisibility(View.GONE);
-                StorageReference vRef = storage.getReference(post.get("path"));
-                vRef.getDownloadUrl()
-                        .addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                holder.video.setVideoURI(uri);
-                                holder.video.seekTo(1000);
-                            }
-                        });
-            }
+            StorageReference iRef = storage.getReference(post.get("path"));
+            iRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.get()
+                            .load(uri)
+                            // .placeholder(R.drawable.ic_full)
+                            .resize(800, 800)
+                            .centerCrop()
+                            .into(holder.image);
+                }
+            });
         }
 
+    }
+    private boolean hasImage(@NonNull ImageView view) {
+        Drawable drawable = view.getDrawable();
+        boolean hasImage = (drawable != null);
+
+        if (hasImage && (drawable instanceof BitmapDrawable)) {
+            hasImage = ((BitmapDrawable)drawable).getBitmap() != null;
+        }
+
+        return hasImage;
     }
     public void updateData(ArrayList<Map<String, String>> map){
         posts.addAll(map);
@@ -163,8 +157,7 @@ public class FeedsAdapter extends
         public TextView name;
         public TextView time;
         public ImageView profile;
-        public VideoView video;
-        public Button download;
+        TextView movieName;
         public LinearLayout user;
         private boolean isPlaying = false;
         // We also create a constructor that accepts the entire item row
@@ -175,10 +168,11 @@ public class FeedsAdapter extends
             super(itemView);
             setIsRecyclable(false);
             //nameTextView = (TextView) itemView.findViewById(R.id.movie_name);
-            image =  itemView.findViewById(R.id.post_image);
+            image = itemView.findViewById(R.id.post_image);
             name = itemView.findViewById(R.id.name);
             time = itemView.findViewById(R.id.time);
             profile = itemView.findViewById(R.id.profile);
+            movieName = itemView.findViewById(R.id.movie_name);
             user = itemView.findViewById(R.id.user);
             user.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -187,46 +181,6 @@ public class FeedsAdapter extends
                     context.startActivity(intent);
                 }
             });
-            video = itemView.findViewById(R.id.video);
-            video.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if(video.isPlaying()) {
-                        video.pause();
-                    }else{
-                        video.start();
-                    }
-
-                }
-            });
-            download = itemView.findViewById(R.id.download);
-            download.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(final View view) {
-                    final String path = posts.get(getPosition()).get("path");
-                    final String[] splitted = path.split("/");
-                    String type= splitted[1];
-                    StorageReference ref = FirebaseStorage.getInstance().getReference(path);
-                    ref.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Uri> task) {
-                            if (task.isSuccessful()) {
-                                downloadFile(splitted[splitted.length - 1], task.getResult());
-                            } else {
-                                Snackbar.make(view, "Error while downloading image", Snackbar.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }
-            });
-        }
-        public void downloadFile(String filename, Uri uri){
-            DownloadManager downloadManager = (DownloadManager)context.getSystemService(Context.DOWNLOAD_SERVICE);
-            DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setDestinationInExternalFilesDir(context, DIRECTORY_DOWNLOADS, filename );
-            downloadManager.enqueue(request);
-
         }
 
 

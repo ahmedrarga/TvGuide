@@ -1,5 +1,7 @@
 package com.example.tvguide.MovieProfile;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -19,32 +21,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ScrollView;
+import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.tvguide.Account.rating;
 import com.example.tvguide.GalleryActivity;
+import com.example.tvguide.HomePage.PosterAdapter;
 import com.example.tvguide.HomePage.SearchResultsRecyclerAdapter;
 import com.example.tvguide.R;
-import com.example.tvguide.YoutubeAPI;
 import com.example.tvguide.tmdb.Cast;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.android.youtube.player.YouTubeBaseActivity;
-import com.google.android.youtube.player.YouTubeInitializationResult;
+
 import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubePlayerFragment;
-import com.google.android.youtube.player.YouTubePlayerSupportFragment;
-import com.google.android.youtube.player.YouTubeThumbnailLoader;
-import com.google.android.youtube.player.YouTubeThumbnailView;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -56,6 +51,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -76,6 +72,9 @@ public class Overview extends Fragment implements View.OnClickListener{
     private List<String> backdrops;
     public static View v;
     ImageButton watched;
+    Movie movie;
+    double rated = 0.5;
+    Button rate;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -122,7 +121,7 @@ public class Overview extends Fragment implements View.OnClickListener{
 
         root.findViewById(R.id.overview_scroll).setVisibility(View.GONE);
         final MovieProfileActivity myActivity = (MovieProfileActivity)getActivity();
-
+        movie = myActivity.movie;
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -134,7 +133,6 @@ public class Overview extends Fragment implements View.OnClickListener{
                     root.findViewById(R.id.toDiss).setVisibility(View.GONE);
                     root.findViewById(R.id.toDiss2).setVisibility(View.GONE);
                 }
-                watched = root.findViewById(R.id.watched);
 
 
                 FloatingActionButton btn = root.findViewById(R.id.add);
@@ -145,67 +143,35 @@ public class Overview extends Fragment implements View.OnClickListener{
 
                     }
                 });
-                String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                rate = root.findViewById(R.id.rate);
+                rate.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        openDialog(view);
+                    }
+                });
                 FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    db.collection("Tracking")
-                            .document(mail)
-                            .get()
-                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    Tracking t = task.getResult().toObject(Tracking.class);
-                                    if (myActivity.movie.getMedia_type().equals("tv")) {
-                                        int episodes = myActivity.movie.getEpisodesNumber();
-                                        if (t != null && t.tracking != null && t.tracking.get(String.valueOf(myActivity.movie.getId())) != null) {
-                                            int count = 0;
-                                            for (HashMap<String, String> map : t.tracking.get(String.valueOf(myActivity.movie.getId()))) {
-                                                if(!map.get("season").equals("0"))
-                                                    count++;
-                                            }
-                                            if (count == episodes) {
-                                                Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
-                                                watched.setImageDrawable(img);
-                                                watched.setTooltipText("Watched");
-                                                myActivity.movie.setWatched(true);
-                                            }else{
-                                                Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
-                                                watched.setImageDrawable(img);
-                                                myActivity.movie.setWatched(false);
-                                            }
-                                        }
-                                    }else{
-                                        if(t != null) {
-                                            ArrayList<HashMap<String, String>> tmp = t.tracking.get(String.valueOf(myActivity.movie.getId()));
-                                            if (tmp != null)
-                                                if (tmp.size() == 1 && tmp.get(0).get("episode").equals("0")) {
-                                                    Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
-                                                    watched.setImageDrawable(img);
-                                                    watched.setTooltipText("Watched");
+                String m = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                db.collection("ratings")
+                        .document(m)
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                rating r = documentSnapshot.toObject(rating.class);
+                                if(r != null && r.arrayList != null){
+                                    for (Map<String, String> m : r.arrayList){
+                                        if(m.get("id").equals(String.valueOf(movie.getId()))){
+                                            String t = "Rated - " + m.get("rating");
+                                            rate.setText(t);
+                                            rated = Double.parseDouble(m.get("rating"));
 
-                                                }
                                         }
                                     }
                                 }
-                            });
+                            }
+                        });
 
-                watched.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        if(myActivity.movie.isWatched()){
-                            myActivity.movie.markUnWatched();
-                            Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
-                            watched.setImageDrawable(img);
-
-                        }else {
-                            myActivity.movie.markWatched();
-                            myActivity.addToWatchList(view);
-                            Drawable img = getContext().getResources().getDrawable(R.drawable.ic_checked);
-                            watched.setImageDrawable(img);
-                            watched.setTooltipText("Watched");
-
-                        }
-                    }
-                });
                 ArrayList<String> arr = myActivity.movie.getGenres();
                 // RecyclerView images = root.findViewById(R.id.images);
                 Requests r = new Requests(myActivity.movie.getId(), myActivity.movie.getMedia_type());
@@ -296,7 +262,7 @@ public class Overview extends Fragment implements View.OnClickListener{
                     root.findViewById(R.id.similar_error).setVisibility(View.GONE);
                     similar.setVisibility(View.VISIBLE);
                 }
-                similar.setAdapter(new SearchResultsRecyclerAdapter(sim, getContext(), media_type));
+                similar.setAdapter(new PosterAdapter(sim, getContext(), media_type));
                 similar.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
 
                 RecyclerView videos = root.findViewById(R.id.videos);
@@ -310,6 +276,48 @@ public class Overview extends Fragment implements View.OnClickListener{
 
 
         return root;
+    }
+    public void openDialog(View view) {
+        View v = getLayoutInflater().inflate(R.layout.rate_dialog, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog dialog = builder.setIcon(R.drawable.ic_star)
+                .setPositiveButton("Ok", null)
+                .setView(v)
+                .create();
+
+
+        dialog.show();
+        TextView textView = v.findViewById(R.id.textView12);
+        String t = "Rate " + movie.getName();
+        textView.setText(t);
+        final RatingBar ratingBar = v.findViewById(R.id.ratingBar2);
+        ratingBar.setRating((float)rated);
+        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, final float v, boolean b) {
+                final FirebaseFirestore db = FirebaseFirestore.getInstance();
+                final String m = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                db.collection("ratings")
+                        .document(m)
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                rating r = documentSnapshot.toObject(rating.class);
+                                if(r == null){
+                                    r = new rating();
+                                    r.arrayList = new ArrayList<>();
+                                }
+                                r.setValue(String.valueOf(movie.getId()), String.valueOf(v));
+                                db.collection("ratings").document(m).set(r);
+                                rated = v;
+                                String t = "Rated - " + String.valueOf(v);
+                                rate.setText(t);
+
+                            }
+                        });
+            }
+        });
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -333,14 +341,6 @@ public class Overview extends Fragment implements View.OnClickListener{
     @Override
     public void onResume() {
         super.onResume();
-        if(!((MovieProfileActivity)getActivity()).movie.isWatched()){
-            Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
-            if(watched == null){
-                watched = v.findViewById(R.id.watched);
-            }
-            watched.setImageDrawable(img);
-            watched.setTooltipText("Watched");
-        }
     }
 
     @Override

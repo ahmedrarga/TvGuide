@@ -179,8 +179,7 @@ public class EpisodeFragment extends DialogFragment implements View.OnClickListe
                                         Track.season.setWatched(false);
                                         CheckBox tmp = SeasonFragment.v.findViewById(R.id.watched);
                                         tmp.setButtonDrawable(img);
-                                        ImageButton tmp1 = Overview.v.findViewById(R.id.watched);
-                                        tmp1.setImageDrawable(img);
+
 
                                     }
 

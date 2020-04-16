@@ -1,116 +1,108 @@
 package com.example.tvguide.User;
 
-import androidx.annotation.Nullable;
-import android.content.Context;
-import android.content.SharedPreferences;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.Task;
 import com.example.tvguide.BaseActivity;
 import com.example.tvguide.R;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
-import de.hdodenhof.circleimageview.CircleImageView;
-public class ProfileActivity extends BaseActivity {
-    private FirebaseAuth mAuth;
-    private CircleImageView circleImageView;
-    private FirebaseFirestore db;
-    private TextView Firstname,Lastname,Email;
-    private String id;
 
+public class ProfileActivity extends AppCompatActivity {
+    ImageView cover;
+    ImageView profile;
+    TextView name;
+    TextView email;
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
-        //profilePicImageView = findViewById(R.id.profile_pic_imageView);
-        String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
-
-        final StorageReference storageReference = FirebaseStorage.getInstance().getReference();
-
-        circleImageView = (CircleImageView)findViewById(R.id.circleImage);
-
-        storageReference.child("images/" + mail + "/profile.jpg").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        ImageView btn = findViewById(R.id.back_butt);
+        btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onSuccess(Uri uri) {
-                Picasso.get().load(uri).fit().centerInside().into(circleImageView);
-                getusername();
+            public void onClick(View view) {
+                ProfileActivity.super.onBackPressed();
             }
         });
 
+        Handler handler = new Handler(getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                FirebaseUser user = mAuth.getCurrentUser();
+                final String m = user.getEmail();
+                System.out.println(m);
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                db.collection("users")
+                        .whereEqualTo("EMAIL", m)
+                        .get()
+                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                if (task.isSuccessful()) {
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
 
-    }
-
-    private void getusername(){
-
-
-        Firstname = findViewById(R.id.textviewfirstname);
-        Lastname = findViewById(R.id.textviewlastname);
-        Email = findViewById(R.id.textviewEmailAddress);
-        StorageReference storageReference = FirebaseStorage.getInstance().getReference();
-        mAuth = FirebaseAuth.getInstance();
-        String email = mAuth.getCurrentUser().getEmail();
-
-
-
-
-        db = FirebaseFirestore.getInstance();
-
-
-        try {
-            Task<QuerySnapshot> task = db.collection("users").whereEqualTo("EMAIL", email).get().
-            addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                @Override
-                public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-
-                    if (queryDocumentSnapshots.isEmpty()) {
-                        Log.d(id, "onSuccess: LIST EMPTY");
-                        return;
-                    }else{
-                        id = queryDocumentSnapshots.getDocuments().get(0).getId();
-                        String topass = id;
-                        saveSess(topass);
+                                        name = findViewById(R.id.name);
+                                        email = findViewById(R.id.email);
+                                        String n = document.getData().get("FIRST_NAME").toString() + " " + document.getData().get("LAST_NAME").toString();
+                                        name.setText(n);
+                                        email.setText(m);
+                                    }
+                                } else {
+                                }
+                            }
+                        });
+                StorageReference ref = FirebaseStorage.getInstance().getReference();
+                StorageReference pRef = ref.child("images/" + m + "/profile.jpg");
+                final long ONE_MEGABYTE = 1024 * 1024;
+                pRef.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Uri> task) {
+                        if (task.isSuccessful()) {
+                            profile = findViewById(R.id.profile);
+                            Picasso.get()
+                                    .load(task.getResult())
+                                    .fit()
+                                    .into(profile);
+                        }
                     }
-                }
-            });
+                });
+                pRef = ref.child("images/" + m + "/cover.jpg");
+                pRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        cover = findViewById(R.id.cover);
+                        Picasso.get()
+                                .load(uri)
+                                .fit()
+                                .into(cover);
+                    }
+                });
+            }
+        });
 
-            final DocumentReference documentReference = db.collection("users").document(getSess());
-            documentReference.addSnapshotListener(this, new EventListener<DocumentSnapshot>() {
-                @Override
-                public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                    Firstname.setText(documentSnapshot.getString("FIRST_NAME"));
-                    Lastname.setText(documentSnapshot.getString("LAST_NAME"));
-                    Email.setText(documentSnapshot.getString("EMAIL"));
-                }
-            });
-        } catch (Exception e) {
-            Log.d("Error", e.toString());
-        }
-
-    }
-    public void saveSess(String a){
-        final SharedPreferences preferences = getSharedPreferences("com.blabla.yourapp", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("NameOfShared", a);
-        editor.commit();
-    }
-    public String getSess(){
-        final SharedPreferences mSharedPreference = getSharedPreferences("com.blabla.yourapp", Context.MODE_PRIVATE);
-        String value=(mSharedPreference.getString("NameOfShared", "Default_Value"));
-        return value;
     }
 
 }
