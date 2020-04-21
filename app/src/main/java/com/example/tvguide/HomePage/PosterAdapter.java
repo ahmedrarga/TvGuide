@@ -1,8 +1,13 @@
 package com.example.tvguide.HomePage;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+
+import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.tvguide.MovieProfile.MovieProfileActivity;
@@ -80,6 +86,7 @@ public class PosterAdapter extends
         //public TextView nameTextView;
         public ImageView image;
         public TextView title;
+        public CardView poster;
         // We also create a constructor that accepts the entire item row
         // and does the view lookups to find each subview
         public ViewHolder(View itemView) {
@@ -89,6 +96,7 @@ public class PosterAdapter extends
             //nameTextView = (TextView) itemView.findViewById(R.id.movie_name);
             image =  itemView.findViewById(R.id.movie_image);
             title = itemView.findViewById(R.id.title);
+            poster = itemView.findViewById(R.id.card_view_row);
             image.setOnClickListener(this);
         }
 
@@ -106,6 +114,9 @@ public class PosterAdapter extends
             intent.putExtra("id", movies.get(this.getPosition()).getId());
             intent.putExtra("media_type",  media_type);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            // Now we can start the Activity, providing the activity options as a bundle
+            //ActivityCompat.startActivity((Activity)context, intent, activityOptions.toBundle());
             context.startActivity(intent);
         }
     }

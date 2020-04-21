@@ -11,10 +11,11 @@ public class Post {
     public Post(){
 
     }
-    public void setValue(String user, String path){
+    public void setValue(String user, String path, String title){
         Map<String, String> map = new HashMap<>();
         map.put("path", path);
         map.put("user", user);
+        map.put("title", title);
         arrayList.add(map);
     }
 

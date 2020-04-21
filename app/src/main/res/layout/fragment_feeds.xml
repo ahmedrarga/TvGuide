@@ -4,30 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    tools:context=".HomePage.Videos">
+    tools:context=".HomePage.Feeds">
 
-    <TextView
-        android:id="@+id/message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/exoPlayerRecyclerView"
-        android:layout_alignTop="@+id/exoPlayerRecyclerView"
-        android:layout_alignEnd="@+id/exoPlayerRecyclerView"
-        android:layout_alignBottom="@+id/exoPlayerRecyclerView"
-        android:layout_marginStart="15dp"
-        android:layout_marginTop="318dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="368dp"
-        android:text="Add movies and shows to your watchlist to see their videos"
-        android:textColor="@color/placeholder"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="gone" />
-
-    <com.example.tvguide.HomePage.ExoPlayerRecyclerView
-        android:id="@+id/exoPlayerRecyclerView"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/feeds_rec"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
@@ -35,9 +15,8 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="0dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="0dp"
         android:layout_marginBottom="0dp"
-        android:background="@color/background"
-        android:dividerHeight="8dp" />
+        android:visibility="visible" />
 </RelativeLayout>

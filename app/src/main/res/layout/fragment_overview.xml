@@ -39,21 +39,33 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/homepage"
+                <LinearLayout
+                    android:id="@+id/home"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:layout_height="match_parent"
                     android:layout_margin="10dp"
                     android:layout_weight="1"
                     android:background="@drawable/round_corner"
-                    android:backgroundTint="@color/colorPrimary"
-                    android:drawableLeft="@drawable/ic_homepage"
-                    android:drawablePadding="10dp"
-                    android:padding="5dp"
-                    android:text="Open homepage"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white" />
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/network"
+                        android:layout_width="@dimen/dimen_40dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="clip_horizontal|center|center_horizontal"
+                        android:layout_marginLeft="5dp"
+                        app:srcCompat="@drawable/ic_homepage" />
+
+                    <TextView
+                        android:id="@+id/watch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="3dp"
+                        android:text="Homepage"
+                        android:textColor="@color/white"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/rate"
@@ -61,11 +73,12 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_margin="10dp"
-                    android:layout_weight="1"
+                    android:layout_weight="0"
                     android:background="@drawable/round_corner"
                     android:backgroundTint="@color/colorPrimary"
                     android:drawableLeft="@drawable/ic_star"
                     android:drawablePadding="10dp"
+                    android:minWidth="150dp"
                     android:padding="5dp"
                     android:text="Rate"
                     android:textAllCaps="false"

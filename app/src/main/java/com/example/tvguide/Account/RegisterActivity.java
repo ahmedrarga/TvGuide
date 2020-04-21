@@ -250,15 +250,6 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     }
     public void uploadPhoto(Bitmap bitmap){
         if(flag) {
-            dialog = new ProgressDialog(this);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.setMessage("Uploading..");
-            dialog.show();
-            try{
-                Thread.sleep(2000);
-            }catch (InterruptedException e){
-
-            }
             String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
             StorageReference storageReference = FirebaseStorage.getInstance().getReference();
             StorageReference ref = storageReference.child("images/" + mail + "/profile.jpg");
@@ -307,6 +298,10 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
     @Override
     public void onFragmentInteraction(Bitmap bitmap, boolean isCover) {
+        dialog = new ProgressDialog(this);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setMessage("Uploading..");
+        dialog.show();
         uploadPhoto(bitmap);
     }
 }

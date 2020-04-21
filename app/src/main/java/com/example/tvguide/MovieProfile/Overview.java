@@ -4,8 +4,12 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -23,6 +27,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -48,10 +53,14 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -71,6 +80,7 @@ public class Overview extends Fragment implements View.OnClickListener{
     private List<String> posters;
     private List<String> backdrops;
     public static View v;
+    LinearLayout home;
     ImageButton watched;
     Movie movie;
     double rated = 0.5;
@@ -121,15 +131,20 @@ public class Overview extends Fragment implements View.OnClickListener{
 
         root.findViewById(R.id.overview_scroll).setVisibility(View.GONE);
         final MovieProfileActivity myActivity = (MovieProfileActivity)getActivity();
-        movie = myActivity.movie;
+
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
+                while (movie == null){
+                    movie = mListener.onFragmentInteraction(root);
+                    System.out.println("null");
+                }
+
                 TextView overview = root.findViewById(R.id.overview);
                 final MovieProfileActivity myActivity = (MovieProfileActivity)getActivity();
-                overview.setText(myActivity.movie.getOverview());
+                overview.setText(movie.getOverview());
                 myActivity.checkWatchlist();
-                if(myActivity.movie.getMedia_type().equals("movie")){
+                if(movie.getMedia_type().equals("movie")){
                     root.findViewById(R.id.toDiss).setVisibility(View.GONE);
                     root.findViewById(R.id.toDiss2).setVisibility(View.GONE);
                 }
@@ -172,11 +187,11 @@ public class Overview extends Fragment implements View.OnClickListener{
                             }
                         });
 
-                ArrayList<String> arr = myActivity.movie.getGenres();
+                ArrayList<String> arr = movie.getGenres();
                 // RecyclerView images = root.findViewById(R.id.images);
-                Requests r = new Requests(myActivity.movie.getId(), myActivity.movie.getMedia_type());
-                posters = myActivity.movie.getPosters();
-                backdrops = myActivity.movie.getBackdrops();
+                Requests r = new Requests(movie.getId(), movie.getMedia_type());
+                posters = movie.getPosters();
+                backdrops = movie.getBackdrops();
                 ImageView p = root.findViewById(R.id.posters);
                 ImageView b = root.findViewById(R.id.backdrops);
                 p.setOnClickListener(Overview.this);
@@ -198,13 +213,27 @@ public class Overview extends Fragment implements View.OnClickListener{
                 //images.setAdapter(new ImagesAdapter(r.getImages(), getContext()));
                 //  images.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
                 RecyclerView genres = root.findViewById(R.id.genres);
-                genres.setAdapter(new GenresAdapter(myActivity.movie.getGenres(), getContext()));
+                genres.setAdapter(new GenresAdapter(movie.getGenres(), getContext()));
                 genres.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-                Button home = root.findViewById(R.id.homepage);
+                home = root.findViewById(R.id.home);
+                HashMap<String,String> map = movie.getNetwork();
+                String n = "";
+                if(map != null){
+                    n = "Watch on " + map.get("name");
+                    TextView text = root.findViewById(R.id.watch);
+                    text.setText(n);
+                    ImageView imageView = root.findViewById(R.id.network);
+                    Picasso.get()
+                            .load(map.get("logo"))
+                            .into(imageView);
+
+
+                }
+
                 home.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        String link = myActivity.movie.getHomePage();
+                        String link = movie.getHomePage();
                         if(link.length() > 4) {
                             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                             startActivity(browserIntent);
@@ -214,7 +243,7 @@ public class Overview extends Fragment implements View.OnClickListener{
                     }
                 });
                 try{
-                    JSONObject obj = myActivity.movie.getLastEpisode();
+                    JSONObject obj = movie.getLastEpisode();
                     if(obj.getBoolean("next")){
                         TextView t = root.findViewById(R.id.toDiss2);
                         t.setText("Next episode to air");
@@ -226,11 +255,11 @@ public class Overview extends Fragment implements View.OnClickListener{
                     String im = obj.getString("still_path");
                     if(im.equals("null")){
                         Picasso.get()
-                                .load(myActivity.movie.getBackdrop_path())
+                                .load(movie.getBackdrop_path())
                                 .into(i);
                     }else {
                         Picasso.get()
-                                .load(myActivity.movie.IMAGE_PATH + im)
+                                .load(movie.IMAGE_PATH + im)
                                 .into(i);
                     }
                     TextView s = root.findViewById(R.id.season);
@@ -244,7 +273,7 @@ public class Overview extends Fragment implements View.OnClickListener{
                 }
                 RecyclerView cast = root.findViewById(R.id.cast);
                 cast.setVisibility(View.GONE);
-                ArrayList<Cast> c = myActivity.movie.getCast();
+                ArrayList<Cast> c = movie.getCast();
                 if(c.size() != 0){
                     root.findViewById(R.id.cast_error).setVisibility(View.GONE);
                     cast.setVisibility(View.VISIBLE);
@@ -254,10 +283,10 @@ public class Overview extends Fragment implements View.OnClickListener{
                 RecyclerView similar = root.findViewById(R.id.similar);
                 similar.setVisibility(View.GONE);
                 String media_type = "show";
-                if(myActivity.movie.getMedia_type().equals("")){
+                if(movie.getMedia_type().equals("")){
                     media_type = "movie";
                 }
-                ArrayList<Movie> sim =  myActivity.movie.getSimilar();
+                ArrayList<Movie> sim =  movie.getSimilar();
                 if(sim.size() != 0){
                     root.findViewById(R.id.similar_error).setVisibility(View.GONE);
                     similar.setVisibility(View.VISIBLE);
@@ -266,7 +295,7 @@ public class Overview extends Fragment implements View.OnClickListener{
                 similar.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
 
                 RecyclerView videos = root.findViewById(R.id.videos);
-                videos.setAdapter(new VideosAdapter(myActivity.movie.getVideos(), getContext()));
+                videos.setAdapter(new VideosAdapter(movie.getVideos(), getContext()));
                 videos.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
                 root.findViewById(R.id.overview_scroll).setVisibility(View.VISIBLE);
                 root.findViewById(R.id.progressBar2).setVisibility(View.GONE);
@@ -320,12 +349,7 @@ public class Overview extends Fragment implements View.OnClickListener{
         });
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
+
 
     @Override
     public void onAttach(Context context) {
@@ -374,6 +398,8 @@ public class Overview extends Fragment implements View.OnClickListener{
      */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        Movie onFragmentInteraction(View view);
+
     }
+
 }

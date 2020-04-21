@@ -1,5 +1,10 @@
 package com.example.tvguide.tmdb;
 
+import android.app.PendingIntent;
+import android.os.Handler;
+import android.os.Looper;
+
+import com.example.tvguide.User.OnFinished;
 import com.example.tvguide.YoutubeAPI;
 import com.squareup.okhttp.Response;
 
@@ -50,14 +55,17 @@ public class Requests {
      }
      public Requests(){
      }
-    public List<Movie> getMoviesFromHashMap(ArrayList<Map<String, Object>> map){
+    public List<Movie> getMoviesFromHashMap(ArrayList<Map<String, Object>> map, final OnFinished finished){
         for(int i = 0; i < map.size(); i++){
-            long id = (long)map.get(i).get("id");
-            String media_type = (String)map.get(i).get("media_type");
+            final long id = (long)map.get(i).get("id");
+            final String media_type = (String)map.get(i).get("media_type");
             Requests r = new Requests((int)id, media_type);
             movies.add(r.getMovieById());
             System.out.println(id);
+
+
         }
+        finished.finished(movies);
         return movies;
     }
     private JSONArray getResults(){

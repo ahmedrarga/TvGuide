@@ -200,15 +200,6 @@ public class SettingsActivity extends BaseActivity implements CropFragment.OnFra
 
     public void uploadPhoto1(final Bitmap bitmap){
         if(flag) {
-            dialog = new ProgressDialog(this);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.setMessage("Uploading..");
-            dialog.show();
-            try{
-                Thread.sleep(2000);
-            }catch (InterruptedException e){
-
-            }
             String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
             StorageReference storageReference = FirebaseStorage.getInstance().getReference();
             StorageReference ref = storageReference.child("images/" + mail + "/profile.jpg");
@@ -254,15 +245,6 @@ public class SettingsActivity extends BaseActivity implements CropFragment.OnFra
 
     public void uploadPhoto2(final Bitmap bitmap){
         if(flag) {
-            dialog = new ProgressDialog(this);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.setMessage("Uploading..");
-            dialog.show();
-            try{
-                Thread.sleep(2000);
-            }catch (InterruptedException e){
-
-            }
             String mail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
             StorageReference storageReference = FirebaseStorage.getInstance().getReference();
             StorageReference ref = storageReference.child("images/" + mail + "/cover.jpg");
@@ -310,6 +292,10 @@ public class SettingsActivity extends BaseActivity implements CropFragment.OnFra
 
     @Override
     public void onFragmentInteraction(Bitmap bitmap, boolean isCover) {
+        dialog = new ProgressDialog(this);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setMessage("Uploading..");
+        dialog.show();
         if(isCover){
             uploadPhoto2(bitmap);
         }else{

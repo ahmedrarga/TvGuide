@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,7 +28,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tvguide.HomePage.CropFragment;
+import com.example.tvguide.HomePage.Feeds;
 import com.example.tvguide.HomePage.HomeActivity;
+import com.example.tvguide.User.OnFinished;
+import com.example.tvguide.User.WatchlistActivity;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -50,8 +54,16 @@ import com.karumi.dexter.listener.DexterError;
 import com.karumi.dexter.listener.PermissionRequestErrorListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.oginotihiro.cropview.CropView;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 import com.squareup.picasso.Picasso;
 import com.yalantis.ucrop.UCrop;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -75,6 +87,8 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
     Button uploadV;
     Snackbar snackbar;
     CropView cropView;
+    ProgressBar progressBar;
+    TextView message;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,56 +100,36 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
         uploadV.setVisibility(View.GONE);
         uploadIm.setVisibility(View.GONE);
         cropView = (CropView) findViewById(R.id.cropView);
-        final ProgressBar progressBar = findViewById(R.id.progressBar4);
-        final TextView message = findViewById(R.id.message);
+        progressBar = findViewById(R.id.progressBar4);
+        message = findViewById(R.id.message);
         message.setVisibility(View.GONE);
-
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                FirebaseFirestore db = FirebaseFirestore.getInstance();
-                String u = FirebaseAuth.getInstance().getCurrentUser().getEmail();
-                db.collection("watchlist").document(u).
-                        get().
-                        addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                if (task.isSuccessful()){
-                                    synchronized (this) {
-                                        try {
-                                            map = (ArrayList)task.getResult().getData().get("listOfMovies");
-                                            r = new Requests();
-                                            movies = r.getMoviesFromHashMap(map);
-                                            if(movies.size() == 0){
-                                                progressBar.setVisibility(View.GONE);
-                                                message.setVisibility(View.VISIBLE);
-                                            }else {
-                                                initRList();
-                                            }
-
-
-                                        }catch (NullPointerException e){
-                                            progressBar.setVisibility(View.GONE);
-                                            message.setVisibility(View.VISIBLE);
-                                        }
-                                    }
-                                }
-                                else{
-                                    Snackbar.make(getWindow().getDecorView().getRootView(), "Error in importing data", Snackbar.LENGTH_SHORT).show();
-                                }
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String u = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        db.collection("watchlist").document(u).
+                get().
+                addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
-                    public void onFailure(@NonNull Exception e) {
-                        System.out.println(e.getMessage() + "ewfqqergkhjegfjWEHFGOWELFG ");
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            try {
+                                ArrayList<Map<String, Object>> map = (ArrayList) task.getResult().getData().get("listOfMovies");
+                                new task().execute(map);
+
+                            } catch (NullPointerException e) {
+
+                            }
+                        } else {
+                        }
                     }
-                });
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                System.out.println(e.getMessage() + "ewfqqergkhjegfjWEHFGOWELFG ");
             }
         });
     }
 
-    private void initRList(){
+    private void initRList(List<Movie> movies){
         final RecyclerView view = findViewById(R.id.watchlist);
         view.setAdapter(new NewPostAdapter(movies, getApplicationContext(), new NewPostListener() {
             @Override
@@ -255,7 +249,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                 Uri contentURI = data.getData();
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
                 LocalDateTime now = LocalDateTime.now();
-                db.uploadVideoPost(choosed.getName(), contentURI, "videos", dtf.format(now));
+                db.uploadVideoPost(String.valueOf(choosed.getId()), choosed.getName(), contentURI, "videos", dtf.format(now));
 
 
 
@@ -269,7 +263,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
         snackbar.show();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
-        db.uploadImagePost(choosed.getName(), bitmap, "images", dtf.format(now));
+        db.uploadImagePost(String.valueOf(choosed.getId()), choosed.getName(), bitmap, "images", dtf.format(now));
     }
 
 
@@ -313,7 +307,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
             return toRet;
         }
 
-        public void uploadImagePost(final String name, final Bitmap image, final String type, final String time){
+        public void uploadImagePost(final String name, final String title,final Bitmap image, final String type, final String time){
             final String mail = mAuth.getCurrentUser().getEmail();
 
             firestore.collection("posts").document(name)
@@ -326,7 +320,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                                 post = new Post();
                             }
                             String path = name + "/" + type + "/" + time;
-                            post.setValue(mail, path);
+                            post.setValue(mail, path, title);
                             firestore.collection("posts").document(name).set(post);
                             StorageReference ref = storage.getReference();
                             StorageReference pRef = ref.child(path);
@@ -356,7 +350,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
 
                     });
         }
-        public void uploadVideoPost(final String name, final Uri uri, final String type, final String time){
+        public void uploadVideoPost(final String name, final String title,final Uri uri, final String type, final String time){
             final String mail = mAuth.getCurrentUser().getEmail();
             final String path = name + "/" + type + "/" + time;
 
@@ -369,7 +363,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
                             if (post == null) {
                                 post = new Post();
                             }
-                            post.setValue(mail, path);
+                            post.setValue(mail, path, title);
                             firestore.collection("posts").document(name).set(post);
                             StorageReference ref = storage.getReference();
                             StorageReference pRef = ref.child(path);
@@ -436,6 +430,64 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
     public void showCropFragment(Uri uri, boolean isCover){
         CropFragment fragment = CropFragment.newInstance(uri.toString(), isCover);
         fragment.show(getSupportFragmentManager(), "Crop");
+    }
+
+    private class task extends AsyncTask<ArrayList<Map<String, Object>>, Void, List<Movie>> {
+
+        @Override
+        protected List<Movie> doInBackground(ArrayList<Map<String, Object>>... voids) {
+            final List<Movie> movies = new ArrayList<>();
+            for(Map<String, Object> m : voids[0]){
+                String query = "https://api.themoviedb.org/3/" +
+                        (String)m.get("media_type") +
+                        "/" + m.get("id") +
+                        "?api_key=" + HomeActivity.api_key;
+                Response response = setResponse(query);
+                if(response != null && response.code() == 200){
+                    try {
+                        movies.add(new Movie(new JSONObject(response.body().string()), (String)m.get("media_type")));
+                    }catch (IOException e1){
+
+                    }catch (JSONException e2){
+
+                    }
+
+                }
+            }
+            return movies;
+        }
+        private Response setResponse(String query){
+            Response response = null;
+            OkHttpClient client = new OkHttpClient();
+            MediaType mediaType = MediaType.parse("application/octet-stream");
+            RequestBody body = RequestBody.create(mediaType, "{}");
+            Request request = new Request.Builder()
+                    .url(query)
+                    .get()
+                    .build();
+
+            try {
+                response = client.newCall(request).execute();
+                return response;
+
+            } catch (Exception e) {
+                System.out.println("Error in doInBackground");
+                System.out.println("Error:" + e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(List<Movie> movies) {
+            super.onPostExecute(movies);
+            if(movies.size() == 0){
+                progressBar.setVisibility(View.GONE);
+                message.setVisibility(View.VISIBLE);
+            }else {
+                initRList(movies);
+            }
+
+        }
     }
 
 }

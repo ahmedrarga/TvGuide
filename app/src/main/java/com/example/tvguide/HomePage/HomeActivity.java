@@ -4,12 +4,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
-import com.example.tvguide.MediaObject;
 import com.example.tvguide.NewPostActivity;
 import com.example.tvguide.Account.SettingsActivity;
-import com.example.tvguide.Post;
 import com.example.tvguide.User.DiscoverActivity;
 import com.example.tvguide.Account.MainActivity;
 import com.example.tvguide.User.ProfileActivity;
@@ -37,12 +36,16 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 import com.squareup.picasso.Picasso;
 import com.wanderingcan.persistentsearch.PersistentSearchView;
 import com.wanderingcan.persistentsearch.drawables.DrawerArrowDrawable;
@@ -55,22 +58,29 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity
         implements PersistentSearchView.OnSearchListener, PersistentSearchView.OnIconClickListener,
-        NavigationView.OnNavigationItemSelectedListener, Videos.OnFragmentInteractionListener, Images.OnFragmentInteractionListener {
+        NavigationView.OnNavigationItemSelectedListener, Feeds.OnFragmentInteractionListener, News.OnFragmentInteractionListener {
     private final String TAG = "HomeActivity";
     private static final int VOICE_RECOGNITION_CODE = 9999;
     boolean flag = true;
     private boolean connected = false;
 
     private boolean mMicEnabled;
+    public static final String api_key = "f98d888dd7ebd466329c6a26f1018a55";
 
 
     private Handler handler;
@@ -83,17 +93,12 @@ public class HomeActivity extends AppCompatActivity
     private TabLayout tabLayout;
     private ViewPager viewPager;
     private Snackbar snackbar;
-    final List<Movie> watchlist = new ArrayList<>();
-    final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-    final FirebaseStorage storage = FirebaseStorage.getInstance();
-    RecyclerView feeds;
-    static int countImages = 0, countVideos = 0;
-    String n = "";
-    static int id = 1;
     public static TextView name;
     public static  TextView email;
     public static ImageView profile;
     public static ImageView cover;
+    ProgressBar searchProg;
+    LinearLayout search;
 
 
 
@@ -101,16 +106,11 @@ public class HomeActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-
         if (mAuth.getCurrentUser() == null) {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
-            finish();
         } else {
-            // Picasso.get()
-            //       .load(R.mipmap.icon_full)
-            //     .into(p_pack);
             tabLayout = findViewById(R.id.tabLayout);
             viewPager = findViewById(R.id.viewPAger);
             final FragmentAdapter adapter = new FragmentAdapter(this, getSupportFragmentManager(), tabLayout.getTabCount());
@@ -122,7 +122,6 @@ public class HomeActivity extends AppCompatActivity
                 @Override
                 public void onTabSelected(TabLayout.Tab tab) {
                     viewPager.setCurrentItem(tab.getPosition());
-
                 }
 
                 @Override
@@ -137,7 +136,10 @@ public class HomeActivity extends AppCompatActivity
             });
 
             rView = findViewById(R.id.rView);
+            search = findViewById(R.id.search);
+            searchProg = findViewById(R.id.searchProg);
             rView.setAdapter(new SearchResultsRecyclerAdapter(movies, getApplicationContext(), "Home"));
+
             mArrowDrawable = new DrawerArrowDrawable(this);
 
             mDrawer = findViewById(R.id.drawer_layout);
@@ -153,7 +155,6 @@ public class HomeActivity extends AppCompatActivity
             cover = findViewById(R.id.cover_profile);
             profile = findViewById(R.id.back_profile);
 
-
             mSearchView = findViewById(R.id.search_bar);
             mSearchView.setNavigationDrawable(mArrowDrawable);
             mSearchView.setOnSearchListener(this);
@@ -161,51 +162,8 @@ public class HomeActivity extends AppCompatActivity
             NavigationView navigationView = findViewById(R.id.nav_view);
             navigationView.setNavigationItemSelectedListener(this);
             navigationView.setCheckedItem(navigationView.getMenu().getItem(0).setChecked(true));
-            new Handler().post(new Runnable() {
-                @Override
-                public void run() {
-                    WatchlistActivity.getWatchList(new Videos.WatchlistListener() {
-                        @Override
-                        public void Watchlist(List<Movie> movies) {
-                            watchlist.addAll(movies);
-                            for (Movie m : watchlist) {
-                                firestore.collection("posts").document(m.getName())
-                                        .get()
-                                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                                if (task.isSuccessful()) {
-                                                    com.example.tvguide.Post post;
-                                                    post = task.getResult().toObject(Post.class);
-                                                    if (post != null) {
-                                                        for (Map<String, String> m : post.arrayList) {
-                                                            final String[] path = m.get("path").split("/");
-                                                            if (path[1].equals("images")) {
-                                                                countImages++;
-                                                                Images.data.add(m);
-                                                                Images.progressBar.setVisibility(View.GONE);
-                                                                Images.feeds.setVisibility(View.VISIBLE);
-                                                                Images.feeds.getAdapter().notifyDataSetChanged();
-                                                            } else {
-                                                                countVideos++;
-                                                                final MediaObject mediaObject = new MediaObject(m.get("path"), m.get("user"));
-                                                                Videos.videoInfoList.add(mediaObject);
-                                                                Videos.mAdapter.notifyDataSetChanged();
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        });
-                            }
-                        }
-                    });
-                }
-            });
-
-
             Handler handler = new Handler(getMainLooper());
-            handler.post(new Runnable() {
+            handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     FirebaseUser user = mAuth.getCurrentUser();
@@ -221,9 +179,8 @@ public class HomeActivity extends AppCompatActivity
                                     if (task.isSuccessful()) {
                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                             Log.d(TAG, document.getId() + " => " + document.getData());
-
-                                            name = findViewById(R.id.name);
-                                            email = findViewById(R.id.email_feild);
+                                             name = findViewById(R.id.name);
+                                             email = findViewById(R.id.email_feild);
                                             String n = document.getData().get("FIRST_NAME").toString() + " " + document.getData().get("LAST_NAME").toString();
                                             name.setText(n);
                                             email.setText(document.getData().get("EMAIL").toString());
@@ -260,27 +217,17 @@ public class HomeActivity extends AppCompatActivity
                         }
                     });
                 }
-            });
+            }, 500);
+
+
         }
     }
 
 
-
-
-
-    private void getMovies(String query) {
-        Requests requests = new Requests(query);
-        movies = requests.getMovies();
-        ((SearchResultsRecyclerAdapter)rView.getAdapter()).updateData(movies);
-        rView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
-
-    }
-
     @Override
     public void onBackPressed() {
-        if(mSearchView.isSearchOpen()) {
-            mSearchView.closeSearch();
-            rView.setVisibility(View.GONE);
+        if(mSearchView.isSearchOpen() || flag) {
+            search.setVisibility(View.GONE);
             tabLayout.setVisibility(View.VISIBLE);
             viewPager.setVisibility(View.VISIBLE);
 
@@ -294,14 +241,15 @@ public class HomeActivity extends AppCompatActivity
         mArrowDrawable.toggle();
         tabLayout.setVisibility(View.GONE);
         viewPager.setVisibility(View.GONE);
-
+        search.setVisibility(View.VISIBLE);
+        flag = false;
     }
 
     @Override
     public void onSearchClosed() {
         mArrowDrawable.toggle();
         if(!flag) {
-            rView.setVisibility(View.GONE);
+            search.setVisibility(View.GONE);
             tabLayout.setVisibility(View.VISIBLE);
             viewPager.setVisibility(View.VISIBLE);
         }
@@ -310,50 +258,37 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onSearchCleared() {
         rView.setVisibility(View.GONE);
-        tabLayout.setVisibility(View.VISIBLE);
-        viewPager.setVisibility(View.VISIBLE);
         flag = true;
     }
 
     @Override
     public void onSearchTermChanged(CharSequence term) {
         final String query = term.toString();
-        handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                getMovies(query);
-                if(flag)
-                    rView.setVisibility(View.VISIBLE);
-                tabLayout.setVisibility(View.GONE);
-                viewPager.setVisibility(View.GONE);
-                flag = false;
-            }
-        }, 300);
+        searchProg.setVisibility(View.VISIBLE);
+        rView.setVisibility(View.GONE);
+        new task().execute(query);
+
 
 
     }
 
     @Override
     public void onSearch(CharSequence text) {
-        mArrowDrawable.toggle();
-        if(text.toString().isEmpty()){
-            rView.setVisibility(View.GONE);
-            tabLayout.setVisibility(View.VISIBLE);
-            viewPager.setVisibility(View.VISIBLE);
-        }else {
-            rView.setVisibility(View.VISIBLE);
-            tabLayout.setVisibility(View.GONE);
-            viewPager.setVisibility(View.GONE);
-            flag = true;
-        }
-        getMovies(text.toString());
+        String q = text.toString();
+        searchProg.setVisibility(View.VISIBLE);
+        rView.setVisibility(View.GONE);
+        new task().execute(q);
+        flag = true;
+
 
     }
     @Override
     public void OnNavigationIconClick() {
         if(mSearchView.isSearchOpen()){
             mSearchView.closeSearch();
+            tabLayout.setVisibility(View.VISIBLE);
+            viewPager.setVisibility(View.VISIBLE);
+            search.setVisibility(View.GONE);
         }else{
             mDrawer.openDrawer(GravityCompat.START);
         }
@@ -370,6 +305,7 @@ public class HomeActivity extends AppCompatActivity
             ArrayList<String> matches = data
                     .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             mSearchView.populateSearchText(matches.get(0));
+            mSearchView.openSearch();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -446,14 +382,75 @@ public class HomeActivity extends AppCompatActivity
     public void onFragmentInteraction(Uri uri) {
 
     }
-    public boolean isInternetAvailable() {
-        try {
-            InetAddress ipAddr = InetAddress.getByName("google.com");
-            //You can replace it with your name
-            return !ipAddr.equals("");
 
-        } catch (Exception e) {
-            return false;
+    public class task extends AsyncTask<String, Void, List<Movie>> {
+
+        @Override
+        protected List<Movie> doInBackground(String... strings) {
+            try{
+                Thread.sleep(1000);
+            }catch (InterruptedException w){
+
+            }
+            String query = "https://api.themoviedb.org/3/search/multi?" +
+                    "api_key=" + api_key +
+                    "&language=en-US&" +
+                    "query=" + strings[0] +
+                    "&page=1";
+            Response response = setResponse(query);
+            List<Movie> movies = new ArrayList<>();
+            if(response != null && response.code() == 200){
+                try {
+                    JSONArray array = new JSONObject(response.body().string()).getJSONArray("results");
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        if (!obj.getString("media_type").equals("person")) {
+                            movies.add(new Movie(obj));
+                        }
+                    }
+                }catch (IOException e1){
+
+                } catch (JSONException e2){
+
+                }
+            }
+            return movies;
+        }
+        private Response setResponse(String query){
+            Response response = null;
+            OkHttpClient client = new OkHttpClient();
+            MediaType mediaType = MediaType.parse("application/octet-stream");
+            RequestBody body = RequestBody.create(mediaType, "{}");
+            Request request = new Request.Builder()
+                    .url(query)
+                    .get()
+                    .build();
+
+            try {
+                response = client.newCall(request).execute();
+                return response;
+
+            } catch (Exception e) {
+                System.out.println("Error in doInBackground");
+                System.out.println("Error:" + e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            rView.setVisibility(View.GONE);
+            searchProg.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected void onPostExecute(List<Movie> movies) {
+            super.onPostExecute(movies);
+            ((SearchResultsRecyclerAdapter)rView.getAdapter()).updateData(movies);
+            rView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+            rView.setVisibility(View.VISIBLE);
+            searchProg.setVisibility(View.GONE);
         }
     }
 }

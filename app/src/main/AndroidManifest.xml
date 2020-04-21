@@ -18,7 +18,7 @@
         android:supportsRtl="false"
         android:theme="@style/MyMaterialTheme"
         tools:replace="android:supportsRtl">
-        <activity android:name=".Account.RatingsActivity"></activity>
+        <activity android:name=".Account.RatingsActivity" />
         <activity android:name=".User.ProfileActivity" />
         <activity android:name=".GalleryActivity" />
         <activity android:name=".ImageActivity" />
@@ -29,12 +29,11 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.tvguide.BaseActivity" />
-
         </activity>
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".NewPostActivity" />
         <activity android:name=".EpisodeActivity" />
         <activity android:name=".BaseActivity" />

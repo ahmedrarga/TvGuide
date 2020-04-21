@@ -1,14 +1,18 @@
 package com.example.tvguide.MovieProfile;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
 import androidx.viewpager.widget.ViewPager;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.transition.Transition;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -29,8 +33,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,31 +52,36 @@ import java.util.Map;
 public class MovieProfileActivity extends AppCompatActivity implements Overview.OnFragmentInteractionListener,
         Posts.OnFragmentInteractionListener, Track.OnFragmentInteractionListener, EpisodeFragment.OnFragmentInteractionListener
         , SeasonFragment.OnFragmentInteractionListener{
-    private int id;
+    protected int id;
     private ImageView image;
     private TextView movie_name;
-    private String media_type;
+    protected String media_type;
+    protected static final String api_key = "f98d888dd7ebd466329c6a26f1018a55";
     Movie movie;
+    boolean finished = false;
+    ImageView poster;
     private boolean isInWatchlist = false;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private TabLayout tabs;
-    private ViewPager pager;
+    public static final String VIEW_NAME_HEADER_IMAGE = "detail:header:image";
+    protected  ViewPager pager;
+     FragmentAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_profile);
-        tabs = findViewById(R.id.movieProfileTab);
-        pager = findViewById(R.id.viewPager);
+        poster = findViewById(R.id.poster);
+        ViewCompat.setTransitionName(poster, VIEW_NAME_HEADER_IMAGE);
         Intent intent = getIntent();
         id = intent.getIntExtra("id", 0);
         media_type = intent.getStringExtra("media_type");
+        tabs = findViewById(R.id.movieProfileTab);
+        pager = findViewById(R.id.viewPager);
+         adapter = new FragmentAdapter(getApplicationContext(),getSupportFragmentManager(), tabs.getTabCount(), media_type);
+
         if(media_type.equals("movie"))
             tabs.removeTabAt(1);
-        final FragmentAdapter adapter = new FragmentAdapter(this,getSupportFragmentManager(), tabs.getTabCount(), media_type);
-        pager.setAdapter(adapter);
-
-
         pager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabs));
 
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -87,6 +105,7 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
 
         image = findViewById(R.id.backdrop);
         movie_name = findViewById(R.id.title);
+
         ImageView back = findViewById(R.id.back);
         back.setClickable(true);
         back.setOnClickListener(new View.OnClickListener() {
@@ -95,24 +114,9 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
                 onBackPressed();
             }
         });
-        Requests requests = new Requests(id, media_type);
-        movie = requests.getMovieById();
-        Picasso.get().load(movie.getBackdrop_path())
-                .into(image);
-        Picasso.get()
-                .load(movie.getPoster_path())
-                .resize(300, 450)
-                .into((ImageView)findViewById(R.id.poster));
-        String name = movie.getName();
-        if(name.length() > 45){
-            name = name.substring(0, 45) + "...";
-        }
-        movie_name.setText(name);
-        TextView rating = findViewById(R.id.rating);
-        rating.setText(String.valueOf(movie.getRating()));
-        TextView air_dates = findViewById(R.id.air_dates);
-        String air = movie.getAirDates() + " | ";
-        air_dates.setText(air);
+        new task().execute(id);
+
+
 
 
     }
@@ -153,6 +157,12 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
             }
         });
     }
+
+    @Override
+    public Movie onFragmentInteraction(View view) {
+        return movie;
+    }
+
 
     @Override
     public void onFragmentInteraction(Uri uri) {
@@ -250,5 +260,133 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
         InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
+
+    public class task extends AsyncTask<Integer, Void, Movie> {
+
+        @Override
+        protected Movie doInBackground(Integer... integers) {
+            String query = "https://api.themoviedb.org/3/" +
+                    media_type +
+                    "/" + integers[0] +
+                    "?api_key=" + api_key +
+                    "&language=en-US";
+            Response response = setResponse(query);
+            Movie movie = null;
+            if(response != null && response.code() == 200){
+                try {
+                    movie = new Movie(new JSONObject(response.body().string()), media_type);
+                }catch (IOException e){
+
+                }catch (JSONException e1){
+
+                }
+            }
+            return movie;
+
+        }
+        private Response setResponse(String query){
+            Response response = null;
+            OkHttpClient client = new OkHttpClient();
+            MediaType mediaType = MediaType.parse("application/octet-stream");
+            RequestBody body = RequestBody.create(mediaType, "{}");
+            Request request = new Request.Builder()
+                    .url(query)
+                    .get()
+                    .build();
+
+            try {
+                response = client.newCall(request).execute();
+                return response;
+
+            } catch (Exception e) {
+                System.out.println("Error in doInBackground");
+                System.out.println("Error:" + e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Movie m) {
+            super.onPostExecute(movie);
+            movie = m;
+            if(movie != null){
+                pager.setAdapter(adapter);
+                pager.setVisibility(View.VISIBLE);
+                tabs.setVisibility(View.VISIBLE);
+                finished = true;
+                Picasso.get().load(movie.getBackdrop_path())
+                        .into(image);
+                Picasso.get()
+                        .load(movie.getPoster_path())
+                        .resize(300, 450)
+                        .into(poster);
+                String name = movie.getName();
+                if(name.length() > 45){
+                    name = name.substring(0, 45) + "...";
+                }
+                movie_name.setText(name);
+                TextView rating = findViewById(R.id.rating);
+                rating.setText(String.valueOf(movie.getRating()));
+                TextView air_dates = findViewById(R.id.air_dates);
+                String air = movie.getAirDates() + " | ";
+                air_dates.setText(air);
+
+
+
+
+            }
+        }
+    }
+    public void loadFullSizeImage(){
+        if(movie != null) {
+            Picasso.get()
+                    .load(movie.getPoster_path())
+                    .into(poster);
+        }
+    }
+    @RequiresApi(21)
+    private boolean addTransitionListener() {
+        final Transition transition = getWindow().getSharedElementEnterTransition();
+
+        if (transition != null) {
+            // There is an entering shared element transition so add a listener to it
+            transition.addListener(new Transition.TransitionListener() {
+                @Override
+                public void onTransitionEnd(Transition transition) {
+                    // As the transition has ended, we can now load the full-size image
+                    loadFullSizeImage();
+
+                    // Make sure we remove ourselves as a listener
+                    transition.removeListener(this);
+                }
+
+                @Override
+                public void onTransitionStart(Transition transition) {
+                    // No-op
+                }
+
+                @Override
+                public void onTransitionCancel(Transition transition) {
+                    // Make sure we remove ourselves as a listener
+                    transition.removeListener(this);
+                }
+
+                @Override
+                public void onTransitionPause(Transition transition) {
+                    // No-op
+                }
+
+                @Override
+                public void onTransitionResume(Transition transition) {
+                    // No-op
+                }
+            });
+            return true;
+        }
+
+        // If we reach here then we have not added a listener
+        return false;
+    }
+
 
 }

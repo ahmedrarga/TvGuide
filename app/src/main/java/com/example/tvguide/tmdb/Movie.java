@@ -10,6 +10,7 @@ import com.example.tvguide.MovieProfile.Track;
 import com.example.tvguide.MovieProfile.Tracking;
 import com.example.tvguide.YoutubeAPI;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -57,6 +58,7 @@ public class Movie implements Parcelable {
         media_type = dest.readString();
         Requests r = new Requests(id, media_type);
         obj = r.getJson();
+        checkWatched();
 
     }
     public Movie(int id, String name, String overview, String poster_path, String backdrop_path, String media_type){
@@ -68,6 +70,7 @@ public class Movie implements Parcelable {
         this.media_type = media_type;
         Requests r = new Requests(id, media_type);
         obj = r.getJson();
+        checkWatched();
 
     }
     public Movie(JSONObject obj) {
@@ -77,16 +80,14 @@ public class Movie implements Parcelable {
             overview = obj.getString("overview");
             poster_path = IMAGE_PATH + obj.getString("poster_path");
             backdrop_path = IMAGE_PATH + obj.getString("backdrop_path");
-            switch (obj.getString("media_type")) {
-                case "movie":
-                    name = obj.getString("title");
-                    media_type = "movie";
-                    break;
-                case "tv":
-                    name = obj.getString("name");
-                    media_type = "tv";
-                    break;
+                if(obj.getString("media_type").equals("movie")) {
+                name = obj.getString("title");
+                media_type = "movie";
+            } else if(obj.getString("media_type").equals("tv")){
+                name= obj.getString("name");
+                media_type = "tv";
             }
+
         }catch (JSONException e){
             media_type = "";
         }
@@ -106,10 +107,42 @@ public class Movie implements Parcelable {
                 case "tv":
                     name = obj.getString("name");
                     this.media_type = "tv";
+                    checkWatched();
                     break;
             }
         }catch (JSONException e){
             media_type = "tv";
+        }
+    }
+    private void checkWatched(){
+        if(media_type.equals("tv")) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("Tracking")
+                    .document(FirebaseAuth.getInstance().getCurrentUser().getEmail())
+                    .get()
+                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @Override
+                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                            Tracking t = documentSnapshot.toObject(Tracking.class);
+                            if (t != null && t.tracking != null && t.tracking.get(String.valueOf(id)) != null) {
+                                ArrayList<HashMap<String, String>> track = t.tracking.get(String.valueOf(id));
+                                int count = 0;
+                                for (HashMap<String, String> m : track) {
+                                    count++;
+                                }
+                                try {
+                                    int episodes = obj.getInt("number_of_episodes");
+                                    if (episodes <= count) {
+                                        watched = true;
+                                    }
+                                } catch (JSONException e) {
+                                    watched = false;
+                                }
+
+
+                            }
+                        }
+                    });
         }
     }
     public boolean markWatched(){
@@ -220,6 +253,17 @@ public class Movie implements Parcelable {
                 });
 
     }
+    public HashMap<String, String> getNetwork(){
+        HashMap<String, String> toRet = new HashMap<>();
+        try {
+            JSONObject network = obj.getJSONArray("networks").getJSONObject(0);
+            toRet.put("logo", IMAGE_PATH + network.getString("logo_path"));
+            toRet.put("name", network.getString("name"));
+        }catch (JSONException e){
+            return null;
+        }
+        return toRet;
+    }
 
     public void setWatched(boolean watched) {
         this.watched = watched;
@@ -299,6 +343,38 @@ public class Movie implements Parcelable {
             }
         }
         return "";
+
+    }
+    public boolean isStreaming(){
+        try {
+            ((JSONObject) obj.get("next_episode_to_air")).put("next", true);
+            return true;
+        }catch (JSONException e){
+            return false;
+        }catch (ClassCastException e2){
+            return false;
+        }
+
+    }
+    public boolean isWaiting(){
+        try {
+            ((JSONObject) obj.get("next_episode_to_air")).put("next", true);
+            return false;
+        }catch (JSONException e){
+            return isReturning() ;
+        }catch (ClassCastException e2){
+            return isReturning();
+        }
+    }
+    private boolean isReturning(){
+        try{
+            if(obj.getString("status").equals("Returning Series")){
+                return true;
+            }
+            return false;
+        }catch (JSONException e){
+            return false;
+        }
 
     }
     public ArrayList<String> getGenres(){
