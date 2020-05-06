@@ -1,4 +1,4 @@
-package com.example.tvguide.HomePage;
+package com.example.tvguide.User;
 
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
@@ -26,16 +26,14 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.tvguide.Constants;
-import com.example.tvguide.MovieProfile.MovieProfileActivity;
+
 import com.example.tvguide.R;
-import com.example.tvguide.User.ProfileActivity;
 import com.example.tvguide.UserPost;
-import com.example.tvguide.tmdb.Movie;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -59,9 +57,9 @@ import static android.os.Environment.DIRECTORY_DOWNLOADS;
 public class FeedsAdapter extends
         RecyclerView.Adapter<FeedsAdapter.ViewHolder> {
 
-    private ArrayList<Map<String,String>> posts;
+    private ArrayList<String> posts;
     private Context context;
-    public FeedsAdapter(ArrayList<Map<String,String>> posts, Context context){
+    public FeedsAdapter(ArrayList<String> posts, Context context, String user){
         this.posts= posts;
         this.context = context;
     }
@@ -82,15 +80,16 @@ public class FeedsAdapter extends
 
     @SuppressLint("ResourceAsColor")
     @Override
-    public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final FeedsAdapter.ViewHolder holder, int position) {
         // Get the data model based on position
-        final Map<String,String> post = posts.get(position);
+        final String post = posts.get(position);
+        String user = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
         if(post != null) {
-            final String[] path = post.get("path").split("/");
+            final String[] path = post.split("/");
             holder.time.setText(path[path.length - 1]);
             StorageReference ref = FirebaseStorage.getInstance().getReference();
-            StorageReference pRef = ref.child("images/" + post.get("user") + "/profile.jpg");
+            StorageReference pRef = ref.child("images/" + user + "/profile.jpg");
             pRef.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
                 @Override
                 public void onComplete(@NonNull Task<Uri> task) {
@@ -103,24 +102,12 @@ public class FeedsAdapter extends
                 }
             });
             final FirebaseStorage storage = FirebaseStorage.getInstance();
-            FirebaseFirestore.getInstance().collection("users")
-                    .whereEqualTo("EMAIL", post.get("user"))
-                    .get()
-                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                        @Override
-                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                                String n = document.getData().get("FIRST_NAME").toString() + " " + document.getData().get("LAST_NAME").toString();
-                                String text = n + " • " + post.get("title");
-                                holder.name.setText(text);
-                            }
+            holder.name.setText(user);
 
-                        }
-                    });
             if (path[1].equals("images")) {
                 holder.video.setVisibility(View.GONE);
                 holder.image.setVisibility(View.VISIBLE);
-                StorageReference iRef = storage.getReference(post.get("path"));
+                StorageReference iRef = storage.getReference(post);
                 iRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
@@ -149,7 +136,7 @@ public class FeedsAdapter extends
                         holder.video.start();
                     }
                 });
-                StorageReference vRef = storage.getReference(post.get("path"));
+                StorageReference vRef = storage.getReference(post);
                 vRef.getDownloadUrl()
                         .addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
@@ -162,9 +149,7 @@ public class FeedsAdapter extends
         }
 
     }
-    public void updateData(ArrayList<Map<String, String>> map){
-        posts.addAll(map);
-    }
+
 
     @Override
     public int getItemCount() {

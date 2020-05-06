@@ -65,6 +65,7 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
     private TabLayout tabs;
     public static final String VIEW_NAME_HEADER_IMAGE = "detail:header:image";
     protected  ViewPager pager;
+    TextView contentRating;
      FragmentAdapter adapter;
 
     @Override
@@ -102,7 +103,7 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
         });
 
 
-
+        contentRating = findViewById(R.id.content_rating);
         image = findViewById(R.id.backdrop);
         movie_name = findViewById(R.id.title);
 
@@ -269,7 +270,7 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
                     media_type +
                     "/" + integers[0] +
                     "?api_key=" + api_key +
-                    "&language=en-US";
+                    "&language=en-US&append_to_response=content_ratings";
             Response response = setResponse(query);
             Movie movie = null;
             if(response != null && response.code() == 200){
@@ -318,7 +319,7 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
                         .into(image);
                 Picasso.get()
                         .load(movie.getPoster_path())
-                        .resize(300, 450)
+                        .fit()
                         .into(poster);
                 String name = movie.getName();
                 if(name.length() > 45){
@@ -330,6 +331,12 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
                 TextView air_dates = findViewById(R.id.air_dates);
                 String air = movie.getAirDates() + " | ";
                 air_dates.setText(air);
+                String content = movie.getContentRating();
+                if(content.equals("")){
+                    contentRating.setVisibility(View.GONE);
+                }else {
+                    contentRating.setText(movie.getContentRating());
+                }
 
 
 
@@ -344,49 +351,5 @@ public class MovieProfileActivity extends AppCompatActivity implements Overview.
                     .into(poster);
         }
     }
-    @RequiresApi(21)
-    private boolean addTransitionListener() {
-        final Transition transition = getWindow().getSharedElementEnterTransition();
-
-        if (transition != null) {
-            // There is an entering shared element transition so add a listener to it
-            transition.addListener(new Transition.TransitionListener() {
-                @Override
-                public void onTransitionEnd(Transition transition) {
-                    // As the transition has ended, we can now load the full-size image
-                    loadFullSizeImage();
-
-                    // Make sure we remove ourselves as a listener
-                    transition.removeListener(this);
-                }
-
-                @Override
-                public void onTransitionStart(Transition transition) {
-                    // No-op
-                }
-
-                @Override
-                public void onTransitionCancel(Transition transition) {
-                    // Make sure we remove ourselves as a listener
-                    transition.removeListener(this);
-                }
-
-                @Override
-                public void onTransitionPause(Transition transition) {
-                    // No-op
-                }
-
-                @Override
-                public void onTransitionResume(Transition transition) {
-                    // No-op
-                }
-            });
-            return true;
-        }
-
-        // If we reach here then we have not added a listener
-        return false;
-    }
-
 
 }

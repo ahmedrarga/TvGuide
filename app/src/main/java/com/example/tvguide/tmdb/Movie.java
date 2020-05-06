@@ -503,6 +503,21 @@ public class Movie implements Parcelable {
         Requests r = new Requests();
         return r.getImages(false, id, media_type);
     }
+    public String getContentRating(){
+        String toRet = "";
+        try{
+            JSONArray array = obj.getJSONObject("content_ratings").getJSONArray("results");
+            for(int i = 0; i < array.length(); i++){
+                JSONObject o = array.getJSONObject(i);
+                if(o.getString("iso_3166_1").equals("US")){
+                    toRet = o.getString("rating");
+                }
+            }
+        }catch (JSONException e){
+
+        }
+        return toRet;
+    }
 
 
 }

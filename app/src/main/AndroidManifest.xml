@@ -18,6 +18,10 @@
         android:supportsRtl="false"
         android:theme="@style/MyMaterialTheme"
         tools:replace="android:supportsRtl">
+        <activity android:name=".RecommenderSystem.recommenderActivity"></activity>
+        <activity
+            android:name=".Account.Settings"
+            android:label="@string/title_activity_settings" />
         <activity android:name=".Account.RatingsActivity" />
         <activity android:name=".User.ProfileActivity" />
         <activity android:name=".GalleryActivity" />

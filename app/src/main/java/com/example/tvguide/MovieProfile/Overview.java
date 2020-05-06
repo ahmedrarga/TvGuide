@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -247,7 +248,7 @@ public class Overview extends Fragment implements View.OnClickListener{
                     if(obj.getBoolean("next")){
                         TextView t = root.findViewById(R.id.toDiss2);
                         t.setText("Next episode to air");
-                    }else{
+                    }else if(obj.getBoolean("last")){
                         TextView t = root.findViewById(R.id.toDiss2);
                         t.setText("Last episode to air");
                     }
@@ -269,6 +270,10 @@ public class Overview extends Fragment implements View.OnClickListener{
                     a.setText(obj.getString("air_date"));
                 }catch (JSONException e){
 
+
+                }catch (ClassCastException e2){
+                    View l = root.findViewById(R.id.toDiss);
+                    l.setVisibility(View.GONE);
 
                 }
                 RecyclerView cast = root.findViewById(R.id.cast);
@@ -337,7 +342,7 @@ public class Overview extends Fragment implements View.OnClickListener{
                                     r = new rating();
                                     r.arrayList = new ArrayList<>();
                                 }
-                                r.setValue(String.valueOf(movie.getId()), String.valueOf(v));
+                                r.setValue(String.valueOf(movie.getId()), String.valueOf(v), movie.getMedia_type());
                                 db.collection("ratings").document(m).set(r);
                                 rated = v;
                                 String t = "Rated - " + String.valueOf(v);

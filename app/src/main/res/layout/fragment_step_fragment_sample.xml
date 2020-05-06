@@ -25,6 +25,7 @@
                 android:layout_width="235dp"
                 android:layout_height="316dp"
                 android:layout_gravity="center"
+                app:srcCompat="@drawable/ic_photo"
                 tools:src="@tools:sample/avatars" />
 
         </androidx.cardview.widget.CardView>

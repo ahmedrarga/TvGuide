@@ -115,7 +115,7 @@ public class StepFragmentSample extends Fragment implements Step {
                                     r = new rating();
                                     r.arrayList = new ArrayList<>();
                                 }
-                                r.setValue(String.valueOf(movie.getId()), String.valueOf(v));
+                                r.setValue(String.valueOf(movie.getId()), String.valueOf(v), "movie");
                                 db.collection("ratings").document(m).set(r);
                             }
                         });

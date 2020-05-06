@@ -39,7 +39,7 @@ public class NewPostAdapter extends
         LayoutInflater inflater = LayoutInflater.from(context);
 
         // Inflate the custom layout
-        View movieView = inflater.inflate(R.layout.poster_movie, parent, false);
+        View movieView = inflater.inflate(R.layout.search_results_row, parent, false);
         // Return a new holder instance
         final ViewHolder viewHolder = new ViewHolder(movieView, mListener);
         return viewHolder;
@@ -57,6 +57,7 @@ public class NewPostAdapter extends
         ImageView image = holder.text;
         Picasso.get()
                 .load(movie.getPoster_path())
+                .fit()
                 .into(image);
 
 

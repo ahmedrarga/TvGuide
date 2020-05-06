@@ -41,7 +41,7 @@
                 android:adjustViewBounds="true"
                 android:clickable="true"
                 android:contextClickable="true"
-                app:srcCompat="@color/colorPrimaryDark" />
+                app:srcCompat="@drawable/ic_photo" />
 
         </androidx.cardview.widget.CardView>
 

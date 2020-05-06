@@ -17,6 +17,8 @@ import com.example.tvguide.R;
 import com.example.tvguide.tmdb.Movie;
 import com.squareup.picasso.Picasso;
 
+import org.w3c.dom.Text;
+
 import java.util.List;
 
 public class SearchResultsRecyclerAdapter extends
@@ -61,8 +63,11 @@ public class SearchResultsRecyclerAdapter extends
         System.out.println(movie.getPoster_path() + " lhkjhbvvuyvgyuvgjftfytfcjd ydyrd gjd     ydjydjydtjytd jyd jy");
         Picasso.get()
                 .load(movie.getPoster_path())
+                .error(R.drawable.ic_photo)
                 .fit()
                 .into(holder.image);
+        holder.title.setText(movie.getName());
+
 
 
 
@@ -78,6 +83,7 @@ public class SearchResultsRecyclerAdapter extends
         // for any view that will be set as you render a row
         //public TextView nameTextView;
         public ImageView image;
+        public TextView title;
         // We also create a constructor that accepts the entire item row
         // and does the view lookups to find each subview
         public ViewHolder(View itemView) {
@@ -87,6 +93,7 @@ public class SearchResultsRecyclerAdapter extends
             //nameTextView = (TextView) itemView.findViewById(R.id.movie_name);
             image =  itemView.findViewById(R.id.movie_image);
             image.setOnClickListener(this);
+            title = itemView.findViewById(R.id.title);
         }
 
         @Override

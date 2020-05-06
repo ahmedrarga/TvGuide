@@ -80,7 +80,7 @@ public class SettingsActivity extends BaseActivity implements CropFragment.OnFra
 
 
 
-    public void Change_Name(View view){
+    public void Change_Name(final View view){
         Currfirstname = findViewById(R.id.currfirstname);
         Currlastname = findViewById(R.id.currlastname);
         final String fName = Currfirstname.getEditText().getText().toString();
@@ -98,6 +98,7 @@ public class SettingsActivity extends BaseActivity implements CropFragment.OnFra
                     db.collection("users").document(id).update("LAST_NAME", lName);
                     String n = fName + " " + lName;
                     HomeActivity.name.setText(n);
+                    Snackbar.make(view, "Name changed", Snackbar.LENGTH_SHORT).show();
                 }
             });
 
@@ -105,11 +106,7 @@ public class SettingsActivity extends BaseActivity implements CropFragment.OnFra
             Log.d("Error", e.toString());
         }
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle("Name Change");
-        alert.setMessage("Name Has Been Changed");
-        alert.setPositiveButton("OK",null);
-        alert.show();
+
 
     }
 

@@ -10,11 +10,13 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:src="@mipmap/icon_full"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:contentDescription="TvGuide" />
+        android:layout_marginBottom="30dp"
+        android:contentDescription="TvGuide"
+        android:src="@mipmap/icon_full"
+        app:srcCompat="@drawable/ic_full" />
 
     <TextView
         android:id="@+id/textView"
@@ -45,7 +47,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:onClick="uploadPhoto"
         android:text="Skip"
         android:textAllCaps="false"
         android:textColor="@android:color/white" />

@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.tvguide.HomePage.DateSorting;
 import com.example.tvguide.HomePage.FeedsAdapter;
 import com.example.tvguide.Post;
 import com.example.tvguide.R;
@@ -25,6 +26,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -87,7 +90,7 @@ public class Posts extends Fragment {
             @Override
             public void run() {
                 FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-                firestore.collection("posts").document(((MovieProfileActivity)getActivity()).movie.getName())
+                firestore.collection("posts").document(String.valueOf(((MovieProfileActivity)getActivity()).movie.getId()))
                         .get()
                         .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                             @Override
@@ -96,6 +99,7 @@ public class Posts extends Fragment {
                                     Post post;
                                     post = task.getResult().toObject(Post.class);
                                     if (post != null) {
+                                        //Collections.sort(post.arrayList, (Comparator)new DateSorting());
                                         feeds.setAdapter(new FeedsAdapter(post.arrayList, getContext()));
                                         feeds.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
                                     }

@@ -21,74 +21,82 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="400dp"
             android:layout_gravity="center"
             android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/user"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:clickable="true"
-                android:orientation="horizontal">
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_margin="3dp"
-                    app:cardBackgroundColor="@color/background"
-                    app:cardCornerRadius="5dp">
-
-                    <ImageView
-                        android:id="@+id/profile"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        tools:srcCompat="@tools:sample/avatars" />
-                </androidx.cardview.widget.CardView>
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/user"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:clickable="true"
+                    android:orientation="horizontal">
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_margin="3dp"
+                        app:cardBackgroundColor="@color/background"
+                        app:cardCornerRadius="5dp">
+
+                        <ImageView
+                            android:id="@+id/profile"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            tools:srcCompat="@tools:sample/avatars" />
+                    </androidx.cardview.widget.CardView>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="5dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/placeholder"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/time"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="5dp"
+                            android:text="Time"
+                            android:textColor="@color/placeholder"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <VideoView
+                    android:id="@+id/video"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginLeft="5dp"
-                    android:gravity="center"
-                    android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/name"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/placeholder"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                    android:foregroundGravity="center|fill_vertical|clip_vertical"
+                    android:visibility="visible" />
 
-                    <TextView
-                        android:id="@+id/time"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="5dp"
-                        android:text="Time"
-                        android:textColor="@color/placeholder"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                <ImageView
+                    android:id="@+id/post_image"
+                    android:layout_width="400dp"
+                    android:layout_height="400dp"
+                    app:srcCompat="@drawable/ic_photo"
+                    tools:visibility="gone" />
+
             </LinearLayout>
-
-            <ImageView
-                android:id="@+id/post_image"
-                android:layout_width="400dp"
-                android:layout_height="400dp"
-                tools:srcCompat="@tools:sample/avatars"
-                tools:visibility="gone" />
-
-            <VideoView
-                android:id="@+id/video"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-
-                android:foregroundGravity="center|fill_vertical|clip_vertical"
-                android:visibility="visible" />
 
 
         </LinearLayout>

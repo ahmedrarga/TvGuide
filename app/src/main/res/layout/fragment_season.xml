@@ -47,7 +47,8 @@
                     <ImageView
                         android:id="@+id/episode_backdrop"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                        android:layout_height="match_parent"
+                        app:srcCompat="@drawable/ic_photo" />
 
                     <ImageView
                         android:id="@+id/close"
@@ -98,7 +99,7 @@
                         android:checked="false"
                         android:drawablePadding="5dp"
                         android:gravity="center"
-                        android:text="Set watched"
+                        android:text="Watched"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white" />
 

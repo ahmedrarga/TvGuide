@@ -183,11 +183,10 @@ public class SeasonFragment extends DialogFragment {
                                         db.collection("Tracking")
                                                 .document(mail)
                                                 .set(t);
-                                        checkBox.setText("Set watched");
+                                        checkBox.setText("Watched");
                                         Drawable img = getContext().getResources().getDrawable( R.drawable.ic_round_uncheck);
                                         checkBox.setButtonDrawable(img);
-                                        ImageButton tmp = Overview.v.findViewById(R.id.watched);
-                                        tmp.setImageDrawable(img);
+                                        ((MovieProfileActivity)getActivity()).movie.setWatched(false);
 
                                     }
                                 }

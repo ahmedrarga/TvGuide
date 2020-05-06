@@ -9,6 +9,7 @@ import android.os.Bundle;
 
 import com.example.tvguide.NewPostActivity;
 import com.example.tvguide.Account.SettingsActivity;
+import com.example.tvguide.RecommenderSystem.recommenderActivity;
 import com.example.tvguide.User.DiscoverActivity;
 import com.example.tvguide.Account.MainActivity;
 import com.example.tvguide.User.ProfileActivity;
@@ -18,6 +19,7 @@ import com.example.tvguide.Account.resetPassword;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
@@ -111,6 +113,7 @@ public class HomeActivity extends AppCompatActivity
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         } else {
+            cover = findViewById(R.id.cover_profile);
             tabLayout = findViewById(R.id.tabLayout);
             viewPager = findViewById(R.id.viewPAger);
             final FragmentAdapter adapter = new FragmentAdapter(this, getSupportFragmentManager(), tabLayout.getTabCount());
@@ -152,7 +155,6 @@ public class HomeActivity extends AppCompatActivity
             mMicEnabled = isIntentAvailable(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH));
             name = findViewById(R.id.name);
             email = findViewById(R.id.email_feild);
-            cover = findViewById(R.id.cover_profile);
             profile = findViewById(R.id.back_profile);
 
             mSearchView = findViewById(R.id.search_bar);
@@ -202,18 +204,26 @@ public class HomeActivity extends AppCompatActivity
                                         .load(task.getResult())
                                         .fit()
                                         .into(profile);
+                            }else{
+                                profile = findViewById(R.id.back_profile);
+                                profile.setImageResource(R.drawable.ic_person);
                             }
                         }
                     });
                     pRef = ref.child("images/" + m + "/cover.jpg");
-                    pRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    pRef.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
                         @Override
-                        public void onSuccess(Uri uri) {
-                            cover = findViewById(R.id.cover_profile);
-                            Picasso.get()
-                                    .load(uri)
-                                    .fit()
-                                    .into(cover);
+                        public void onComplete(@NonNull Task<Uri> task) {
+                            if(task.isSuccessful()){
+                                cover = findViewById(R.id.cover_profile);
+                                Picasso.get()
+                                        .load(task.getResult())
+                                        .fit()
+                                        .into(cover);
+                            }else{
+                                cover = findViewById(R.id.cover_profile);
+                                cover.setImageResource(R.drawable.ic_full);
+                            }
                         }
                     });
                 }
@@ -366,6 +376,9 @@ public class HomeActivity extends AppCompatActivity
         } else if(id == R.id.setting){
             Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
             startActivity(intent);
+        } else if(id == R.id.recommendations_page){
+            Intent intent = new Intent(getApplicationContext(), recommenderActivity.class);
+            startActivity(intent);
         }
         else if (id == R.id.Logout) {
             signOut();
@@ -448,7 +461,7 @@ public class HomeActivity extends AppCompatActivity
         protected void onPostExecute(List<Movie> movies) {
             super.onPostExecute(movies);
             ((SearchResultsRecyclerAdapter)rView.getAdapter()).updateData(movies);
-            rView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+            rView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 3));
             rView.setVisibility(View.VISIBLE);
             searchProg.setVisibility(View.GONE);
         }

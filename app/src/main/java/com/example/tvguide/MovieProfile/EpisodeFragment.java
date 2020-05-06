@@ -171,11 +171,10 @@ public class EpisodeFragment extends DialogFragment implements View.OnClickListe
                                         db.collection("Tracking")
                                                 .document(mail)
                                                 .set(t);
-                                        checkBox.setText("Set watched");
+                                        checkBox.setText("Watched");
                                         Drawable img = getContext().getResources().getDrawable(R.drawable.ic_round_uncheck);
                                         checkBox.setButtonDrawable(img);
                                         e.setWatched(false);
-                                        ((MovieProfileActivity)getActivity()).movie.setWatched(false);
                                         Track.season.setWatched(false);
                                         CheckBox tmp = SeasonFragment.v.findViewById(R.id.watched);
                                         tmp.setButtonDrawable(img);

@@ -3,6 +3,7 @@ package com.example.tvguide;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,6 +35,7 @@ import com.example.tvguide.User.OnFinished;
 import com.example.tvguide.User.WatchlistActivity;
 import com.example.tvguide.tmdb.Movie;
 import com.example.tvguide.tmdb.Requests;
+import com.firebase.ui.auth.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -156,7 +158,7 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
         }));
         findViewById(R.id.progressBar4).setVisibility(View.GONE);
         view.setVisibility(View.VISIBLE);
-        view.setLayoutManager(new LinearLayoutManager(getApplicationContext(), RecyclerView.HORIZONTAL, false));
+        view.setLayoutManager(new GridLayoutManager(getApplicationContext(),3));
     }
 
     @Override
@@ -309,6 +311,20 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
 
         public void uploadImagePost(final String name, final String title,final Bitmap image, final String type, final String time){
             final String mail = mAuth.getCurrentUser().getEmail();
+            firestore.collection("userPosts")
+                    .document(mail)
+                    .get()
+                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @Override
+                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                            UserPost uPost = documentSnapshot.toObject(UserPost.class);
+                            if(uPost == null){
+                                uPost = new UserPost();
+                            }
+                            uPost.setValue(name + "/" + type + "/" + time);
+                            firestore.collection("userPost").document(mail).set(uPost);
+                        }
+                    });
 
             firestore.collection("posts").document(name)
                     .get()
@@ -353,6 +369,20 @@ public class NewPostActivity extends BaseActivity implements View.OnClickListene
         public void uploadVideoPost(final String name, final String title,final Uri uri, final String type, final String time){
             final String mail = mAuth.getCurrentUser().getEmail();
             final String path = name + "/" + type + "/" + time;
+            firestore.collection("userPosts")
+                    .document(mail)
+                    .get()
+                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @Override
+                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                            UserPost uPost = documentSnapshot.toObject(UserPost.class);
+                            if(uPost == null){
+                                uPost = new UserPost();
+                            }
+                            uPost.setValue(name + "/" + type + "/" + time);
+                            firestore.collection("userPost").document(mail).set(uPost);
+                        }
+                    });
 
             firestore.collection("posts").document(name)
                     .get()

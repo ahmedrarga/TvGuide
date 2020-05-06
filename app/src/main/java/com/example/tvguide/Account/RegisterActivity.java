@@ -62,6 +62,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     private ImageView img;
     private Uri contentURI;
     private boolean flag = false;
+    Button btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,6 +147,16 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                                                 dialog.dismiss();
                                                 //Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                                 //startActivity(intent);
+                                                btn = findViewById(R.id.skip);
+                                                btn.setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View view) {
+                                                        Intent intent = new Intent(getApplicationContext(), RatingsActivity.class);
+                                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                        startActivity(intent);
+                                                    }
+                                                });
+
                                                 reg.setVisibility(View.INVISIBLE);
                                                 con.setVisibility(View.VISIBLE);
                                                 Snackbar.make(v, "User Registered Successfuly", Snackbar.LENGTH_SHORT).show();
@@ -272,7 +283,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     // ...
                     Snackbar.make(getWindow().getDecorView().getRootView(), "Uploaded", Snackbar.LENGTH_SHORT).show();
                     flag = false;
-                    Button btn = findViewById(R.id.skip);
+
                     btn.setText("Done");
                     dialog.dismiss();
 
@@ -287,17 +298,31 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 }
             });
         }else {
+            if(dialog.isShowing())
+                dialog.dismiss();
             Intent intent = new Intent(getApplicationContext(), RatingsActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
+
         }
+
 
     }
 
 
 
+
     @Override
     public void onFragmentInteraction(Bitmap bitmap, boolean isCover) {
+        btn = findViewById(R.id.skip);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), RatingsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            }
+        });
         dialog = new ProgressDialog(this);
         dialog.setCanceledOnTouchOutside(false);
         dialog.setMessage("Uploading..");

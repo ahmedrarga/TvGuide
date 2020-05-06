@@ -43,7 +43,7 @@
                     android:background="@drawable/round_corner"
                     android:clickable="true"
                     android:contextClickable="true"
-                    app:srcCompat="@drawable/ic_person" />
+                    app:srcCompat="@drawable/ic_photo" />
             </androidx.cardview.widget.CardView>
 
             <LinearLayout

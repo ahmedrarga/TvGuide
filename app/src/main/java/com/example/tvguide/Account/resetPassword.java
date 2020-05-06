@@ -33,12 +33,7 @@ public class resetPassword extends BaseActivity {
         initToolbar("Reset password");
     }
 
-    @Override
-    public void onBackPressed() {
-        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-        //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-    }
+
 
     public void resetpassword(View view) {
         hideKeyboard(view);

@@ -10,8 +10,12 @@ public class rating {
     public rating(){
 
     }
-    public void setValue(String id, String rating){
+    public void setValue(String id, String rating, String media_type){
         Map<String, String> map = new HashMap<>();
+        String type = "movie";
+        if(media_type.equals("tv")) {
+            type = "tv";
+        }
         boolean flag = false;
         for (Map<String, String> m : arrayList){
             if(id.equals(m.get("id"))){
@@ -22,6 +26,7 @@ public class rating {
         if(!flag) {
             map.put("id", id);
             map.put("rating", rating);
+            map.put("type", type);
             arrayList.add(map);
         }
     }

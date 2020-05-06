@@ -25,7 +25,7 @@
         app:headerLayout="@layout/nav_header_home"
         app:menu="@menu/activity_home_drawer"
         app:itemIconTint="@color/placeholder"
-    app:itemTextColor="@color/placeholder"
+        app:itemTextColor="@color/placeholder"
      />
 
 

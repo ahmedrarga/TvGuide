@@ -29,7 +29,7 @@ public class StepAdapter extends AbstractFragmentStepAdapter {
 
     @Override
     public int getCount() {
-        return 50;
+        return 20;
     }
 
     @NonNull

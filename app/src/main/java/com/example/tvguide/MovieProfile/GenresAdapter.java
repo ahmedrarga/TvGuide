@@ -52,7 +52,7 @@ public class GenresAdapter extends
         //TextView textView = holder.nameTextView;
         // textView.setText(movie.getName());
         TextView text = holder.text;
-        String s = "  " + genres.get(position) + "  ";
+        String s = genres.get(position);
         text.setText(s);
 
 
